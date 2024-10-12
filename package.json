@@ -1,0 +1,20 @@
+{
+	"name": "effect-hazel",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run src/index.ts --watch"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.3",
+		"@types/bun": "1.1.11"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@effect/platform": "^0.68.2",
+		"@effect/schema": "^0.75.3",
+		"effect": "^3.9.1"
+	}
+}
