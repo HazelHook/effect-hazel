@@ -1,4 +1,4 @@
-import { ConfigProvider, Effect, Layer, ManagedRuntime } from "effect"
+import { ConfigProvider, Effect, Layer, ManagedRuntime, Option } from "effect"
 import { HttpService } from "./services/http-service"
 import { PokeApi } from "./services/poke-api"
 
@@ -14,9 +14,11 @@ const PokemonRuntime = ManagedRuntime.make(MainLayer)
 const program = Effect.gen(function* () {
 	const httpClient = yield* HttpService
 
-	const res = yield* httpClient.getEntry("customers", "cus_PNOSY2QB1DXged")
+	// const res = yield* httpClient.getEntry("customers", "cus_PNOSY2QB1DXged")
+	const res2 = yield* httpClient.getEntries("customers", { type: "cursor", cursorId: Option.none(), limit: 3 })
 
-	yield* Effect.log(res)
+	// yield* Effect.log(res)
+	yield* Effect.log(res2)
 }).pipe(Effect.provide(MainLayer))
 
 const main = program.pipe(
@@ -25,4 +27,4 @@ const main = program.pipe(
 	}),
 )
 
-PokemonRuntime.runPromise(main).then(console.log)
+PokemonRuntime.runPromise(main)
