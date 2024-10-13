@@ -1,18 +1,25 @@
-import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "@effect/platform"
+import {
+	FetchHttpClient,
+	HttpClient,
+	type HttpClientError,
+	HttpClientRequest,
+	HttpClientResponse,
+} from "@effect/platform"
 import type { Schema } from "@effect/schema"
+import type { ParseError } from "@effect/schema/ParseResult"
 import { Effect, Option } from "effect"
 
-export type HttpServiceReturnType<GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
+export type HttpServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
 	getEntry: (
 		entityType: string,
 		bearerToken: string,
 		entryId: string,
-	) => Effect.Effect<GetEntrySchema, unknown, never>
+	) => Effect.Effect<{ id: string; data: Item }, HttpClientError.HttpClientError | ParseError, never>
 	getEntries: (
 		entityType: string,
 		bearerToken: string,
 		options: { type: "cursor"; cursorId: Option.Option<string>; limit: number },
-	) => Effect.Effect<GetEntriesSchema, unknown, never>
+	) => Effect.Effect<{ id: string; data: Item }[], HttpClientError.HttpClientError | ParseError, never>
 }
 
 export class HttpService extends Effect.Service<HttpService>()("HttpService", {
@@ -22,17 +29,20 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 		const httpClient = defaultClient.pipe(HttpClient.filterStatusOk)
 
 		return {
-			get: <GetEntrySchema, GetEntriesSchema>(
+			get: <Item, GetEntrySchema, GetEntriesSchema>(
 				baseUrl: string,
 				baseOptions: {
+					itemSchema: Schema.Schema<Item, any>
 					getEntry: {
+						mapData: (data: GetEntrySchema) => Effect.Effect<{ id: string; data: Item }, never, never>
 						schema: Schema.Schema<GetEntrySchema, any>
 					}
 					getEntries: {
+						mapData: (data: GetEntriesSchema) => Effect.Effect<{ id: string; data: Item }[], never, never>
 						schema: Schema.Schema<GetEntriesSchema, any>
 					}
 				},
-			): HttpServiceReturnType<GetEntrySchema, GetEntriesSchema> => {
+			): HttpServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
 				return {
 					getEntry: (entityType: string, bearerToken: string, entryId: string) =>
 						Effect.gen(function* () {
@@ -41,6 +51,7 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 								HttpClientRequest.bearerToken(bearerToken),
 								httpClient.execute,
 								Effect.flatMap(HttpClientResponse.schemaBodyJson(baseOptions.getEntry.schema)),
+								Effect.flatMap(baseOptions.getEntry.mapData),
 								Effect.scoped,
 							)
 						}),
@@ -64,6 +75,7 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 								HttpClientRequest.appendUrlParams(params),
 								httpClient.execute,
 								Effect.flatMap(HttpClientResponse.schemaBodyJson(baseOptions.getEntries.schema)),
+								Effect.flatMap(baseOptions.getEntries.mapData),
 								Effect.scoped,
 							)
 						}),

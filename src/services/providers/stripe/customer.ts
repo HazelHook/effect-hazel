@@ -49,11 +49,21 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 		const httpClient = yield* HttpService
 
 		const providerClient = httpClient.get("https://api.stripe.com/v1/", {
+			itemSchema: StripeCustomerSchema,
 			getEntry: {
 				schema: StripeCustomerSchema,
+				mapData(data) {
+					return Effect.succeed({
+						id: data.id,
+						data: data,
+					})
+				},
 			},
 			getEntries: {
 				schema: StripeGetCustomersResSchema,
+				mapData(data) {
+					return Effect.succeed(data.data.map((datum) => ({ id: datum.id, data: datum })))
+				},
 			},
 		})
 

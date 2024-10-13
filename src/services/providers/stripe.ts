@@ -1,22 +1,16 @@
-import { Context, Effect, Layer } from "effect"
-import { HttpService } from "../http-service"
+import { Effect, TMap } from "effect"
+import type { HttpServiceImpl } from "../http-service"
+import { StripeCustomerProvider } from "./stripe/customer"
 
-interface StripeApiImpl {
-	readonly getEntry: () => Effect.Effect<string, never, HttpService>
-}
+export class StripeApi extends Effect.Service<StripeApi>()("StripeApi", {
+	effect: Effect.gen(function* () {
+		const stripeCustomerProvider = yield* StripeCustomerProvider
 
-export class StripeApi extends Context.Tag("PokeApiUrl")<StripeApi, StripeApiImpl>() {
-	static readonly Live = Layer.effect(
-		this,
-		Effect.gen(function* () {
-			return {
-				getEntry: () =>
-					Effect.gen(function* () {
-						const httpService = yield* HttpService
+		const collectionMap = yield* TMap.empty<string, HttpServiceImpl>()
 
-						return "wow"
-					}),
-			}
-		}),
-	)
-}
+		yield* TMap.set(collectionMap, "customers", stripeCustomerProvider)
+
+		return collectionMap
+	}),
+	dependencies: [StripeCustomerProvider.Default],
+}) {}

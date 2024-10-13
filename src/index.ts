@@ -1,28 +1,28 @@
-import { Effect, Layer, ManagedRuntime, Option } from "effect"
-import { HttpService, type HttpServiceReturnType } from "./services/http-service"
-import { StripeCustomerProvider } from "./services/providers/stripe/customer"
+import { Effect, Layer, ManagedRuntime, Option, TMap } from "effect"
+import { HttpService } from "./services/http-service"
+import { StripeApi } from "./services/providers/stripe"
 
 const MainLayer = Layer.mergeAll(HttpService.Default)
 
-const MainRuntime = ManagedRuntime.make(StripeCustomerProvider.Default)
+const MainRuntime = ManagedRuntime.make(StripeApi.Default)
 
 const program = Effect.gen(function* () {
-	const stripeCustomerProvider = yield* StripeCustomerProvider
+	const stripeApi = yield* StripeApi
 
-	// const res = yield* providerClient.getEntry("customers", "cus_PNOSY2QB1DXged")
-	const res2 = yield* stripeCustomerProvider.getEntries(
+	const stripeCustomerApi = yield* Effect.map(TMap.get(stripeApi, "customers"), Option.getOrThrow)
+
+	const res = yield* stripeCustomerApi.getEntry(
+		"customers",
+		"sk_test_51O49TKHnq6bnmaLKsiDm5RXHHJDitx8BWZAB6IPyT1P1zL72YratDZh9XpyIDVPT18lC7UPoEtY6FMbhaxRJ4ZZS00nVkrNXBR",
+		"cus_PNOSY2QB1DXged",
+	)
+	const res2 = yield* stripeCustomerApi.getEntries(
 		"customers",
 		"sk_test_51O49TKHnq6bnmaLKsiDm5RXHHJDitx8BWZAB6IPyT1P1zL72YratDZh9XpyIDVPT18lC7UPoEtY6FMbhaxRJ4ZZS00nVkrNXBR",
 		{ type: "cursor", cursorId: Option.none(), limit: 3 },
 	)
 
-	const collections = new Map<string, HttpServiceReturnType>()
-
-	// TODO: this shoudl be a actual collection client instead of the http client
-	collections.set("customer", stripeCustomerProvider)
-
-	// yield* Effect.log(res)
-	yield* Effect.log(res2)
+	yield* Effect.log(res)
 }).pipe(Effect.provide(MainLayer))
 
 const main = program.pipe(
