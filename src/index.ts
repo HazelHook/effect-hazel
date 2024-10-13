@@ -1,6 +1,16 @@
-import { Effect, Layer, ManagedRuntime, Option, TMap } from "effect"
+import { Config, Effect, Layer, ManagedRuntime, Option, TMap } from "effect"
 import { HttpService } from "./services/http-service"
 import { StripeApi } from "./services/providers/stripe"
+
+import * as PgDrizzle from "@effect/sql-drizzle/Pg"
+import { PgClient } from "@effect/sql-pg"
+
+const PgLive = PgClient.layer({
+	database: Config.succeed("postgres"),
+	username: Config.succeed("postgres"),
+})
+
+const DrizzleLive = PgDrizzle.layer.pipe(Layer.provide(PgLive))
 
 const MainLayer = Layer.mergeAll(HttpService.Default)
 
