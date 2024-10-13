@@ -22,6 +22,18 @@ export type HttpServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntries
 	) => Effect.Effect<{ id: string; data: Item }[], HttpClientError.HttpClientError | ParseError, never>
 }
 
+export type BaseOptions<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
+	itemSchema: Schema.Schema<Item, any>
+	getEntry: {
+		mapData: (data: GetEntrySchema) => Effect.Effect<{ id: string; data: Item }, never, never>
+		schema: Schema.Schema<GetEntrySchema, any>
+	}
+	getEntries: {
+		mapData: (data: GetEntriesSchema) => Effect.Effect<{ id: string; data: Item }[], never, never>
+		schema: Schema.Schema<GetEntriesSchema, any>
+	}
+}
+
 export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 	effect: Effect.gen(function* () {
 		const defaultClient = yield* HttpClient.HttpClient
@@ -31,17 +43,7 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 		return {
 			get: <Item, GetEntrySchema, GetEntriesSchema>(
 				baseUrl: string,
-				baseOptions: {
-					itemSchema: Schema.Schema<Item, any>
-					getEntry: {
-						mapData: (data: GetEntrySchema) => Effect.Effect<{ id: string; data: Item }, never, never>
-						schema: Schema.Schema<GetEntrySchema, any>
-					}
-					getEntries: {
-						mapData: (data: GetEntriesSchema) => Effect.Effect<{ id: string; data: Item }[], never, never>
-						schema: Schema.Schema<GetEntriesSchema, any>
-					}
-				},
+				baseOptions: BaseOptions<Item, GetEntrySchema, GetEntriesSchema>,
 			): HttpServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
 				return {
 					getEntry: (entityType: string, bearerToken: string, entryId: string) =>

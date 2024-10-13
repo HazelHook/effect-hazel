@@ -32,3 +32,5 @@ const main = program.pipe(
 )
 
 MainRuntime.runPromise(main)
+
+// TODOS: Implement Sync Function
