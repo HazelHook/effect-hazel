@@ -21,16 +21,12 @@ const program = Effect.gen(function* () {
 
 	const stripeCustomerApi = yield* Effect.map(TMap.get(stripeApi, "customers"), Option.getOrThrow)
 
-	const res = yield* stripeCustomerApi.getEntry(
-		"customers",
-		"sk_test_51O49TKHnq6bnmaLKsiDm5RXHHJDitx8BWZAB6IPyT1P1zL72YratDZh9XpyIDVPT18lC7UPoEtY6FMbhaxRJ4ZZS00nVkrNXBR",
-		"cus_PNOSY2QB1DXged",
-	)
-	const res2 = yield* stripeCustomerApi.getEntries(
-		"customers",
-		"sk_test_51O49TKHnq6bnmaLKsiDm5RXHHJDitx8BWZAB6IPyT1P1zL72YratDZh9XpyIDVPT18lC7UPoEtY6FMbhaxRJ4ZZS00nVkrNXBR",
-		{ type: "cursor", cursorId: Option.none(), limit: 3 },
-	)
+	const res = yield* stripeCustomerApi.getEntry("customers", yield* Config.string("TEST_TOKEN"), "cus_PNOSY2QB1DXged")
+	const res2 = yield* stripeCustomerApi.getEntries("customers", yield* Config.string("TEST_TOKEN"), {
+		type: "cursor",
+		cursorId: Option.none(),
+		limit: 3,
+	})
 
 	yield* Effect.log(res)
 }).pipe(Effect.provide(MainLayer))
