@@ -52,6 +52,7 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 						Effect.scoped,
 					)
 				}),
+			// TODO: GetEntries
 		}
 	}).pipe(Effect.provide(FetchHttpClient.layer)),
 }) {}
