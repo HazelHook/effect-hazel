@@ -1,5 +1,5 @@
 import { Effect, TMap } from "effect"
-import type { HttpServiceImpl } from "../http-service"
+import type { CollectionServiceImpl } from "../collection-service"
 import { ClerkApi } from "./clerk/clerk"
 import { StripeApi } from "./stripe/stripe"
 
@@ -8,7 +8,7 @@ export class Providers extends Effect.Service<Providers>()("Providers", {
 		const stripeProvider = yield* StripeApi
 		const clerkProvider = yield* ClerkApi
 
-		const providerMap = yield* TMap.empty<string, TMap.TMap<string, HttpServiceImpl>>()
+		const providerMap = yield* TMap.empty<string, TMap.TMap<string, CollectionServiceImpl>>()
 
 		yield* TMap.set(providerMap, "stripe", stripeProvider)
 		yield* TMap.set(providerMap, "clerk", clerkProvider)

@@ -1,6 +1,6 @@
 import { Schema } from "@effect/schema"
 import { Effect } from "effect"
-import { HttpService } from "../../http-service"
+import { CollectionService } from "../../collection-service"
 
 export class StripeGetMultipleSchema extends Schema.Class<StripeGetMultipleSchema>("StripeGetMultiple")({
 	object: Schema.String,
@@ -46,7 +46,7 @@ export class StripeGetCustomersResSchema extends StripeGetMultipleSchema.extend<
 
 export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvider>()("StripeCustomerProvider", {
 	effect: Effect.gen(function* () {
-		const httpClient = yield* HttpService
+		const httpClient = yield* CollectionService
 
 		const providerClient = httpClient.get("https://api.stripe.com/v1/", {
 			itemSchema: StripeCustomerSchema,
@@ -69,5 +69,5 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 
 		return providerClient
 	}),
-	dependencies: [HttpService.Default],
+	dependencies: [CollectionService.Default],
 }) {}

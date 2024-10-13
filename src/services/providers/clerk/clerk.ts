@@ -1,9 +1,9 @@
 import { Effect, TMap } from "effect"
-import type { HttpServiceImpl } from "../../http-service"
+import type { CollectionServiceImpl } from "../../collection-service"
 
 export class ClerkApi extends Effect.Service<ClerkApi>()("ClerkApi", {
 	effect: Effect.gen(function* () {
-		const collectionMap = yield* TMap.empty<string, HttpServiceImpl>()
+		const collectionMap = yield* TMap.empty<string, CollectionServiceImpl>()
 
 		// yield* TMap.set(collectionMap, "customers", stripeCustomerProvider)
 

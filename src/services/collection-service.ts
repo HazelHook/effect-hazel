@@ -9,7 +9,7 @@ import type { Schema } from "@effect/schema"
 import type { ParseError } from "@effect/schema/ParseResult"
 import { Effect, Option } from "effect"
 
-export type HttpServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
+export type CollectionServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
 	getEntry: (
 		entityType: string,
 		bearerToken: string,
@@ -34,7 +34,7 @@ export type BaseOptions<Item = unknown, GetEntrySchema = unknown, GetEntriesSche
 	}
 }
 
-export class HttpService extends Effect.Service<HttpService>()("HttpService", {
+export class CollectionService extends Effect.Service<CollectionService>()("CollectionService", {
 	effect: Effect.gen(function* () {
 		const defaultClient = yield* HttpClient.HttpClient
 
@@ -44,7 +44,7 @@ export class HttpService extends Effect.Service<HttpService>()("HttpService", {
 			get: <Item, GetEntrySchema, GetEntriesSchema>(
 				baseUrl: string,
 				baseOptions: BaseOptions<Item, GetEntrySchema, GetEntriesSchema>,
-			): HttpServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
+			): CollectionServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
 				return {
 					getEntry: (entityType: string, bearerToken: string, entryId: string) =>
 						Effect.gen(function* () {
