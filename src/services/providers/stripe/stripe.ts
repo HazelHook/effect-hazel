@@ -1,6 +1,6 @@
 import { Effect, TMap } from "effect"
-import type { HttpServiceImpl } from "../http-service"
-import { StripeCustomerProvider } from "./stripe/customer"
+import type { HttpServiceImpl } from "../../http-service"
+import { StripeCustomerProvider } from "./customer"
 
 export class StripeApi extends Effect.Service<StripeApi>()("StripeApi", {
 	effect: Effect.gen(function* () {
