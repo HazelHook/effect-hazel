@@ -1,35 +1,23 @@
-import { Config, Effect, Layer, ManagedRuntime, Option, TMap } from "effect"
-import { CollectionService } from "./services/collection-service"
+import { Config, Effect, Layer, Option, TMap } from "effect"
 
 import * as PgDrizzle from "@effect/sql-drizzle/Pg"
 
-import { NodeSdk } from "@effect/opentelemetry"
-
 import { PgClient } from "@effect/sql-pg"
-import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { CollectionNotFoundError, ProviderNotFoundError } from "./errors"
 import { Providers } from "./services/providers/providers-service"
 
-import { DevTools } from "@effect/experimental"
-import { BunSocket } from "@effect/platform-bun"
+import { BunRuntime } from "@effect/platform-bun"
+import { DevToolsLive } from "./services/devtools-service"
+import { OpenTelemtryLive } from "./services/open-telemntry-service"
 
 const PgLive = PgClient.layer({
 	database: Config.succeed("postgres"),
 	username: Config.succeed("postgres"),
 })
 
-const DevToolsLive = DevTools.layerWebSocket().pipe(Layer.provide(BunSocket.layerWebSocketConstructor))
-
 const DrizzleLive = PgDrizzle.layer.pipe(Layer.provide(PgLive))
 
-const NodeSdkLive = NodeSdk.layer(() => ({
-	resource: { serviceName: "provider-sync" },
-	spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
-}))
-
-const MainLayer = Layer.mergeAll(CollectionService.Default, DevToolsLive)
-
-const MainRuntime = ManagedRuntime.make(Providers.Default)
+const MainLayer = Layer.mergeAll(DevToolsLive, Providers.Default)
 
 const program = Effect.gen(function* () {
 	const providers = yield* Providers
@@ -56,15 +44,14 @@ const program = Effect.gen(function* () {
 	})
 
 	yield* Effect.log(res)
-}).pipe(Effect.provide(MainLayer), Effect.provide(NodeSdkLive))
+}).pipe(Effect.provide(MainLayer), Effect.provide(OpenTelemtryLive))
 
-const main = program.pipe(
+program.pipe(
 	Effect.catchTags({
 		// ParseError: () => Effect.succeed("Parse error"),
 	}),
+	BunRuntime.runMain,
 )
-
-MainRuntime.runPromise(main)
 
 // TODO: Implement Sync Function
 // TODO: How to implement retries?

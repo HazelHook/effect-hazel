@@ -19,6 +19,7 @@
 		"@effect/sql": "^0.16.4",
 		"@effect/sql-drizzle": "^0.14.4",
 		"@effect/sql-pg": "^0.16.4",
+		"@opentelemetry/exporter-trace-otlp-http": "^0.53.0",
 		"@opentelemetry/sdk-metrics": "^1.26.0",
 		"@opentelemetry/sdk-trace-base": "^1.26.0",
 		"@opentelemetry/sdk-trace-node": "^1.26.0",
