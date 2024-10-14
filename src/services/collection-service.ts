@@ -9,6 +9,12 @@ import type { Schema } from "@effect/schema"
 import type { ParseError } from "@effect/schema/ParseResult"
 import { Effect, Option } from "effect"
 
+export type PaginationInfo = {
+	type: "cursor"
+	hasMore: boolean
+	cursorId: Option.Option<string>
+}
+
 export type CollectionServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
 	getEntry: (
 		entityType: string,
@@ -19,7 +25,11 @@ export type CollectionServiceImpl<Item = unknown, GetEntrySchema = unknown, GetE
 		entityType: string,
 		bearerToken: string,
 		options: { type: "cursor"; cursorId: Option.Option<string>; limit: number },
-	) => Effect.Effect<{ id: string; data: Item }[], HttpClientError.HttpClientError | ParseError, never>
+	) => Effect.Effect<
+		{ items: { id: string; data: Item }[]; paginationInfo: PaginationInfo },
+		HttpClientError.HttpClientError | ParseError,
+		never
+	>
 }
 
 export type BaseOptions<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
@@ -29,7 +39,14 @@ export type BaseOptions<Item = unknown, GetEntrySchema = unknown, GetEntriesSche
 		schema: Schema.Schema<GetEntrySchema, any>
 	}
 	getEntries: {
-		mapData: (data: GetEntriesSchema) => Effect.Effect<{ id: string; data: Item }[], never, never>
+		mapData: (data: GetEntriesSchema) => Effect.Effect<
+			{
+				items: { id: string; data: Item }[]
+				paginationInfo: PaginationInfo
+			},
+			never,
+			never
+		>
 		schema: Schema.Schema<GetEntriesSchema, any>
 	}
 }
