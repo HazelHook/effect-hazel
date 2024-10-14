@@ -2,18 +2,32 @@ import { Config, Effect, Layer, ManagedRuntime, Option, TMap } from "effect"
 import { CollectionService } from "./services/collection-service"
 
 import * as PgDrizzle from "@effect/sql-drizzle/Pg"
+
+import { NodeSdk } from "@effect/opentelemetry"
+
 import { PgClient } from "@effect/sql-pg"
+import { BatchSpanProcessor, ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base"
 import { CollectionNotFoundError, ProviderNotFoundError } from "./errors"
 import { Providers } from "./services/providers/providers-service"
+
+import { DevTools } from "@effect/experimental"
+import { BunSocket } from "@effect/platform-bun"
 
 const PgLive = PgClient.layer({
 	database: Config.succeed("postgres"),
 	username: Config.succeed("postgres"),
 })
 
+const DevToolsLive = DevTools.layerWebSocket().pipe(Layer.provide(BunSocket.layerWebSocketConstructor))
+
 const DrizzleLive = PgDrizzle.layer.pipe(Layer.provide(PgLive))
 
-const MainLayer = Layer.mergeAll(CollectionService.Default)
+const NodeSdkLive = NodeSdk.layer(() => ({
+	resource: { serviceName: "provider-sync" },
+	spanProcessor: new BatchSpanProcessor(new ConsoleSpanExporter()),
+}))
+
+const MainLayer = Layer.mergeAll(CollectionService.Default, DevToolsLive)
 
 const MainRuntime = ManagedRuntime.make(Providers.Default)
 
@@ -42,7 +56,7 @@ const program = Effect.gen(function* () {
 	})
 
 	yield* Effect.log(res)
-}).pipe(Effect.provide(MainLayer))
+}).pipe(Effect.provide(MainLayer), Effect.provide(NodeSdkLive))
 
 const main = program.pipe(
 	Effect.catchTags({

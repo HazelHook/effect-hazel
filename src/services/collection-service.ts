@@ -56,7 +56,7 @@ export class CollectionService extends Effect.Service<CollectionService>()("Coll
 								Effect.flatMap(baseOptions.getEntry.mapData),
 								Effect.scoped,
 							)
-						}),
+						}).pipe(Effect.withSpan("getEntry")),
 					getEntries: (
 						entityType: string,
 						bearerToken: string,
@@ -80,7 +80,7 @@ export class CollectionService extends Effect.Service<CollectionService>()("Coll
 								Effect.flatMap(baseOptions.getEntries.mapData),
 								Effect.scoped,
 							)
-						}),
+						}).pipe(Effect.withSpan("getEntries")),
 				}
 			},
 		}

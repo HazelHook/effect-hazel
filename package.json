@@ -11,11 +11,18 @@
 		"typescript": "^5.6.3"
 	},
 	"dependencies": {
-		"@effect/platform": "^0.68.2",
-		"@effect/schema": "^0.75.3",
-		"@effect/sql": "^0.16.3",
-		"@effect/sql-drizzle": "^0.14.3",
-		"@effect/sql-pg": "^0.16.3",
-		"effect": "^3.9.1"
+		"@effect/experimental": "^0.29.4",
+		"@effect/opentelemetry": "^0.38.2",
+		"@effect/platform": "^0.68.4",
+		"@effect/platform-bun": "^0.48.4",
+		"@effect/schema": "^0.75.4",
+		"@effect/sql": "^0.16.4",
+		"@effect/sql-drizzle": "^0.14.4",
+		"@effect/sql-pg": "^0.16.4",
+		"@opentelemetry/sdk-metrics": "^1.26.0",
+		"@opentelemetry/sdk-trace-base": "^1.26.0",
+		"@opentelemetry/sdk-trace-node": "^1.26.0",
+		"@opentelemetry/sdk-trace-web": "^1.26.0",
+		"effect": "^3.9.2"
 	}
 }
