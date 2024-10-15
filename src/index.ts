@@ -12,7 +12,7 @@ const MainLayer = Layer.mergeAll(DevToolsLive, Providers.Default, SyncingService
 const program = Effect.gen(function* () {
 	const syncingService = yield* SyncingService
 
-	yield* syncingService.syncCollection("stripe", "customers")
+	yield* syncingService.syncResource("TODO", "stripe", "customers")
 }).pipe(Effect.provide(MainLayer), Effect.provide(OpenTelemtryLive))
 
 const exit = await Effect.runPromiseExit(program)
@@ -34,6 +34,5 @@ Exit.match(exit, {
 // 	BunRuntime.runMain,
 // )
 
-// TODO: How to implement retries?
 // TODO: Implement Ratelimiting for CollectionService
 // TODO: Implement Hatchet Worker Stuff

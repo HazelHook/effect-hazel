@@ -15,7 +15,7 @@ export type PaginationInfo = {
 	cursorId: Option.Option<string>
 }
 
-export type CollectionServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
+export type ResourceServiceImpl<Item = unknown, GetEntrySchema = unknown, GetEntriesSchema = unknown> = {
 	getEntry: (
 		entityType: string,
 		bearerToken: string,
@@ -51,7 +51,7 @@ export type BaseOptions<Item = unknown, GetEntrySchema = unknown, GetEntriesSche
 	}
 }
 
-export class CollectionService extends Effect.Service<CollectionService>()("CollectionService", {
+export class ResourceService extends Effect.Service<ResourceService>()("CollectionService", {
 	effect: Effect.gen(function* () {
 		const defaultClient = yield* HttpClient.HttpClient
 
@@ -64,7 +64,7 @@ export class CollectionService extends Effect.Service<CollectionService>()("Coll
 			get: <Item, GetEntrySchema, GetEntriesSchema>(
 				baseUrl: string,
 				baseOptions: BaseOptions<Item, GetEntrySchema, GetEntriesSchema>,
-			): CollectionServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
+			): ResourceServiceImpl<Item, GetEntrySchema, GetEntriesSchema> => {
 				return {
 					getEntry: (entityType: string, bearerToken: string, entryId: string) =>
 						Effect.gen(function* () {

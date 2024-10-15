@@ -1,6 +1,6 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { Config, Effect, Option, TMap } from "effect"
-import { CollectionNotFoundError, ProviderNotFoundError } from "../errors"
+import { ProviderNotFoundError, ResourceNotFoundError } from "../errors"
 import { Providers } from "./providers/providers-service"
 
 import { sql } from "drizzle-orm"
@@ -12,7 +12,7 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 		const providers = yield* Providers
 
 		return {
-			syncCollection: (providerKey: string, collectionKey: string) =>
+			syncResource: (collectionId: string, providerKey: string, resourceKey: string) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
 
@@ -21,16 +21,16 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						Option.getOrThrowWith(() => new ProviderNotFoundError(providerKey)),
 					)
 
-					const collection = yield* Effect.map(
-						TMap.get(provider, collectionKey),
-						Option.getOrThrowWith(() => new CollectionNotFoundError(providerKey, collectionKey)),
+					const resource = yield* Effect.map(
+						TMap.get(provider, resourceKey),
+						Option.getOrThrowWith(() => new ResourceNotFoundError(providerKey, resourceKey)),
 					)
 
 					let hasMore = true
 					let cursorId: Option.Option<string> = Option.none()
 
 					while (hasMore) {
-						const { paginationInfo, items } = yield* collection.getEntries(
+						const { paginationInfo, items } = yield* resource.getEntries(
 							"customers",
 							yield* Config.string("TEST_TOKEN"),
 							{
@@ -44,9 +44,8 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 							return {
 								externalId: item.id,
 								data: item.data,
-								// TODO: HERE
-								collectionId: "fb830b70-7493-4801-befe-bd02e0960a8f",
-								resourceKey: collectionKey,
+								collectionId: collectionId,
+								resourceKey: resourceKey,
 							}
 						})
 
@@ -63,11 +62,24 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								},
 							})
 
+						yield* Effect.logInfo(
+							`synced ${dbItems.length} items for ${providerKey}:${resourceKey}`,
+							`hasMore ${hasMore}`,
+						)
+
 						cursorId = paginationInfo.cursorId
 						hasMore = paginationInfo.hasMore
 						yield* Effect.log(items.length, hasMore)
 					}
-				}).pipe(Effect.withSpan("syncCollection")),
+				}).pipe(
+					Effect.withSpan("syncCollection", {
+						attributes: {
+							collectionId: collectionId,
+							resourceKey: resourceKey,
+							providerKey: providerKey,
+						},
+					}),
+				),
 		}
 	}),
 	dependencies: [Providers.Default],

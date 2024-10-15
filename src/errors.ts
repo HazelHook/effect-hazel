@@ -9,12 +9,12 @@ export class ProviderNotFoundError extends Data.TaggedError("ProviderNotFoundErr
 	}
 }
 
-export class CollectionNotFoundError extends Data.TaggedError("CollectionNotFoundError")<{
+export class ResourceNotFoundError extends Data.TaggedError("CollectionNotFoundError")<{
 	message: string
-	collection: string
-	provider: string
+	resourceKey: string
+	providerKey: string
 }> {
-	constructor(provider: string, collection: string) {
-		super({ message: `Collection "${collection}" not found for provider ${provider}.`, collection, provider })
+	constructor(providerKey: string, resourceKey: string) {
+		super({ message: `Resource "${resourceKey}" not found for provider ${providerKey}.`, providerKey, resourceKey })
 	}
 }
