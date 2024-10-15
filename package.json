@@ -8,6 +8,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3",
 		"@types/bun": "1.1.11",
+		"drizzle-kit": "^0.25.0",
 		"typescript": "^5.6.3"
 	},
 	"dependencies": {
@@ -24,6 +25,7 @@
 		"@opentelemetry/sdk-trace-base": "^1.26.0",
 		"@opentelemetry/sdk-trace-node": "^1.26.0",
 		"@opentelemetry/sdk-trace-web": "^1.26.0",
+		"drizzle-orm": "^0.34.1",
 		"effect": "^3.9.2"
 	}
 }

@@ -1,6 +1,10 @@
+import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { Config, Effect, Option, TMap } from "effect"
 import { CollectionNotFoundError, ProviderNotFoundError } from "../errors"
 import { Providers } from "./providers/providers-service"
+
+import * as schema from "../drizzle/schema"
+import type { InsertItem } from "./db-service"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
@@ -9,6 +13,8 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 		return {
 			syncCollection: (providerKey: string, collectionKey: string) =>
 				Effect.gen(function* () {
+					const db = yield* PgDrizzle
+
 					const provider = yield* Effect.map(
 						TMap.get(providers, providerKey),
 						Option.getOrThrowWith(() => new ProviderNotFoundError(providerKey)),
@@ -32,6 +38,17 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								limit: 3,
 							},
 						)
+
+						const dbItems: InsertItem[] = items.map((item) => {
+							return {
+								externalId: item.id,
+								data: item.data,
+								collectionId: "fb830b70-7493-4801-befe-bd02e0960a8f",
+								resourceKey: collectionKey,
+							}
+						})
+
+						yield* db.insert(schema.items).values(dbItems)
 
 						cursorId = paginationInfo.cursorId
 						hasMore = paginationInfo.hasMore

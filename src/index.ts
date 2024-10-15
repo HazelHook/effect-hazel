@@ -1,24 +1,14 @@
-import { Config, Effect, Exit, Layer, Option, TMap } from "effect"
+import { Effect, Exit, Layer } from "effect"
 
-import * as PgDrizzle from "@effect/sql-drizzle/Pg"
-
-import { PgClient } from "@effect/sql-pg"
-import { CollectionNotFoundError, ProviderNotFoundError } from "./errors"
 import { Providers } from "./services/providers/providers-service"
 
-import { BunRuntime } from "@effect/platform-bun"
+import { PgDrizzle } from "@effect/sql-drizzle/Pg"
+import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { SyncingService } from "./services/syncing-service"
 
-const PgLive = PgClient.layer({
-	database: Config.succeed("postgres"),
-	username: Config.succeed("postgres"),
-})
-
-const DrizzleLive = PgDrizzle.layer.pipe(Layer.provide(PgLive))
-
-const MainLayer = Layer.mergeAll(DevToolsLive, Providers.Default, SyncingService.Default)
+const MainLayer = Layer.mergeAll(DevToolsLive, Providers.Default, SyncingService.Default, DrizzleLive)
 
 const program = Effect.gen(function* () {
 	const syncingService = yield* SyncingService
@@ -30,6 +20,7 @@ const exit = await Effect.runPromiseExit(program)
 
 Exit.match(exit, {
 	onFailure: (cause) => {
+		console.log(cause)
 		console.log("Failure!")
 	},
 	onSuccess: () => {
