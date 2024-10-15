@@ -2,7 +2,6 @@ import { Effect, Exit, Layer } from "effect"
 
 import { Providers } from "./services/providers/providers-service"
 
-import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"

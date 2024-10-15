@@ -3,6 +3,7 @@ import { Config, Effect, Option, TMap } from "effect"
 import { CollectionNotFoundError, ProviderNotFoundError } from "../errors"
 import { Providers } from "./providers/providers-service"
 
+import { sql } from "drizzle-orm"
 import * as schema from "../drizzle/schema"
 import type { InsertItem } from "./db-service"
 
@@ -43,12 +44,24 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 							return {
 								externalId: item.id,
 								data: item.data,
+								// TODO: HERE
 								collectionId: "fb830b70-7493-4801-befe-bd02e0960a8f",
 								resourceKey: collectionKey,
 							}
 						})
 
-						yield* db.insert(schema.items).values(dbItems)
+						yield* db
+							.insert(schema.items)
+							.values(dbItems)
+							.onConflictDoUpdate({
+								target: [schema.items.collectionId, schema.items.externalId],
+								set: {
+									data: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN excluded.data ELSE ${schema.items.data} END`,
+									lastSeenAt: sql`now()`,
+									deletedAt: sql`NULL`,
+									updatedAt: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN now() ELSE ${schema.items.updatedAt} END`,
+								},
+							})
 
 						cursorId = paginationInfo.cursorId
 						hasMore = paginationInfo.hasMore
