@@ -34,6 +34,6 @@ Exit.match(exit, {
 // 	BunRuntime.runMain,
 // )
 
-// TODO: Implement Sync Function
 // TODO: How to implement retries?
 // TODO: Implement Ratelimiting for CollectionService
+// TODO: Implement Hatchet Worker Stuff

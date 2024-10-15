@@ -7,7 +7,7 @@ import {
 } from "@effect/platform"
 import type { Schema } from "@effect/schema"
 import type { ParseError } from "@effect/schema/ParseResult"
-import { Effect, Option } from "effect"
+import { Effect, Option, Schedule } from "effect"
 
 export type PaginationInfo = {
 	type: "cursor"
@@ -55,7 +55,10 @@ export class CollectionService extends Effect.Service<CollectionService>()("Coll
 	effect: Effect.gen(function* () {
 		const defaultClient = yield* HttpClient.HttpClient
 
-		const httpClient = defaultClient.pipe(HttpClient.filterStatusOk)
+		const httpClient = defaultClient.pipe(
+			HttpClient.filterStatusOk,
+			HttpClient.retry({ times: 3, schedule: Schedule.exponential("300 millis") }),
+		)
 
 		return {
 			get: <Item, GetEntrySchema, GetEntriesSchema>(
