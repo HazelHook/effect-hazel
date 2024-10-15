@@ -29,14 +29,13 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 							{
 								type: "cursor",
 								cursorId: cursorId,
-								limit: 50,
+								limit: 3,
 							},
 						)
 
 						cursorId = paginationInfo.cursorId
 						hasMore = paginationInfo.hasMore
-
-						yield* Effect.log(items.length)
+						yield* Effect.log(items.length, hasMore)
 					}
 				}).pipe(Effect.withSpan("syncCollection")),
 		}
