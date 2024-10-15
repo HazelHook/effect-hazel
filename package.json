@@ -21,6 +21,7 @@
 		"@effect/sql": "^0.16.5",
 		"@effect/sql-drizzle": "^0.14.5",
 		"@effect/sql-pg": "^0.16.5",
+		"@hatchet-dev/typescript-sdk": "^0.14.0",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.53.0",
 		"@opentelemetry/sdk-metrics": "^1.26.0",
 		"@opentelemetry/sdk-trace-base": "^1.26.0",

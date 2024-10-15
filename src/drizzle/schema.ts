@@ -38,7 +38,7 @@ export const collections = pgTable("collections", {
 	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	name: text().notNull(),
 	providerId: provider("provider_id").notNull(),
-	resources: text().array(),
+	resources: text().array().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),

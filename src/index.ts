@@ -2,10 +2,13 @@ import { Effect, Exit, Layer } from "effect"
 
 import { Providers } from "./services/providers/providers-service"
 
+import Hatchet from "@hatchet-dev/typescript-sdk"
 import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { SyncingService } from "./services/syncing-service"
+
+const hatchet = Hatchet.init()
 
 const MainLayer = Layer.mergeAll(DevToolsLive, Providers.Default, SyncingService.Default, DrizzleLive)
 
@@ -36,3 +39,7 @@ Exit.match(exit, {
 
 // TODO: Implement Ratelimiting for CollectionService
 // TODO: Implement Hatchet Worker Stuff
+
+const worker = await hatchet.worker("typescript-worker")
+
+await worker.start()
