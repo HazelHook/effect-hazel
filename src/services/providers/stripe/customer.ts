@@ -1,5 +1,5 @@
 import { Schema } from "@effect/schema"
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { CollectionService } from "../../collection-service"
 
 export class StripeGetMultipleSchema extends Schema.Class<StripeGetMultipleSchema>("StripeGetMultiple")({
@@ -62,7 +62,15 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 			getEntries: {
 				schema: StripeGetCustomersResSchema,
 				mapData(data) {
-					return Effect.succeed(data.data.map((datum) => ({ id: datum.id, data: datum })))
+					const cursorId = data.data[data.data.length - 1]?.id
+					return Effect.succeed({
+						items: data.data.map((datum) => ({ id: datum.id, data: datum })),
+						paginationInfo: {
+							type: "cursor",
+							hasMore: data.has_more,
+							cursorId: cursorId ? Option.some(cursorId) : Option.none(),
+						},
+					})
 				},
 			},
 		})
