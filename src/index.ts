@@ -8,6 +8,7 @@ import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { SyncingService } from "./services/syncing-service"
 import { collectionSyncWorkflow } from "./workflows/collection-sync"
+import { resourceSyncWorkflow } from "./workflows/resource-sync"
 
 const hatchet = Hatchet.init()
 
@@ -50,5 +51,6 @@ Exit.match(exit, {
 const worker = await hatchet.worker("typescript-worker")
 
 worker.registerWorkflow(collectionSyncWorkflow)
+worker.registerWorkflow(resourceSyncWorkflow)
 
 await worker.start()

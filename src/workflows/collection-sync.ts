@@ -6,7 +6,6 @@ import { eq, sql } from "drizzle-orm"
 import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
 import { ChildJobError, CollectionNotFoundError } from "../errors"
-import { DrizzleLive } from "../services/db-service"
 import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
 type WorkflowInput = {
@@ -72,6 +71,9 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 
 		const sucessfulJobs = finishedJobs.filter((job) => Either.isRight(job))
 		const failedJobs = finishedJobs.filter((job) => Either.isLeft(job))
+
+		yield* Effect.logInfo("Successful Jobs", sucessfulJobs.length)
+		yield* Effect.logInfo("Failed Jobs", failedJobs.length)
 
 		if (failedJobs.length > 0) {
 			// TODO: Do something smarter here with these errors
