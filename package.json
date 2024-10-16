@@ -9,25 +9,25 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.3",
 		"@types/bun": "1.1.11",
-		"drizzle-kit": "^0.25.0",
+		"drizzle-kit": "^0.26.2",
 		"typescript": "^5.6.3"
 	},
 	"dependencies": {
-		"@effect/experimental": "^0.29.5",
+		"@effect/experimental": "^0.29.6",
 		"@effect/opentelemetry": "^0.38.2",
-		"@effect/platform": "^0.68.5",
-		"@effect/platform-bun": "^0.48.5",
-		"@effect/schema": "^0.75.4",
-		"@effect/sql": "^0.16.5",
-		"@effect/sql-drizzle": "^0.14.5",
-		"@effect/sql-pg": "^0.16.5",
+		"@effect/platform": "^0.68.6",
+		"@effect/platform-bun": "^0.48.6",
+		"@effect/schema": "^0.75.5",
+		"@effect/sql": "^0.16.6",
+		"@effect/sql-drizzle": "^0.14.6",
+		"@effect/sql-pg": "^0.16.6",
 		"@hatchet-dev/typescript-sdk": "^0.14.0",
 		"@opentelemetry/exporter-trace-otlp-http": "^0.53.0",
 		"@opentelemetry/sdk-metrics": "^1.26.0",
 		"@opentelemetry/sdk-trace-base": "^1.26.0",
 		"@opentelemetry/sdk-trace-node": "^1.26.0",
 		"@opentelemetry/sdk-trace-web": "^1.26.0",
-		"drizzle-orm": "^0.34.1",
+		"drizzle-orm": "^0.35.1",
 		"effect": "^3.9.2"
 	}
 }

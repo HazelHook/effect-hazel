@@ -1,10 +1,12 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
-import { Effect } from "effect"
+import { Effect, Either } from "effect"
 
 import { eq, sql } from "drizzle-orm"
+import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
 import { ChildJobError, CollectionNotFoundError } from "../errors"
+import { DrizzleLive } from "../services/db-service"
 import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
 type WorkflowInput = {
@@ -24,6 +26,8 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 		if (!collection) {
 			return yield* new CollectionNotFoundError(ctx.data.input.collectionId)
 		}
+
+		yield* Effect.logInfo("Syncing Collection", collection.name)
 
 		yield* db.update(schema.syncJobs).set({
 			status: "running",
@@ -61,21 +65,33 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 			)
 		}
 
-		// TODO Collect all children jobs to collect error messages
 		const finishedJobs = yield* Effect.all(childJobs, {
 			concurrency: "unbounded",
 			mode: "either",
 		})
+
+		const sucessfulJobs = finishedJobs.filter((job) => Either.isRight(job))
+		const failedJobs = finishedJobs.filter((job) => Either.isLeft(job))
+
+		if (failedJobs.length > 0) {
+			// TODO: Do something smarter here with these errors
+			yield* db.update(schema.syncJobs).set({
+				status: "error",
+				errorMessage: `Failed to sync ${failedJobs.length} resources`,
+			})
+
+			return { success: true }
+		}
 
 		yield* db.update(schema.syncJobs).set({
 			status: "completed",
 			completedAt: sql`now()`,
 		})
 
-		return
-	})
+		return { success: true }
+	}).pipe(Effect.withSpan("collection-sync"))
 
-const workflow: Workflow = {
+export const collectionSyncWorkflow: Workflow = {
 	id: "collection-sync-ts",
 	description: "Workflow to Sync a Collection with all of its resources",
 	on: {
@@ -83,9 +99,9 @@ const workflow: Workflow = {
 	},
 	steps: [
 		{
-			name: "step1",
+			name: "sync",
 			run: async (ctx: Context<WorkflowInput>) => {
-				// Effect.runPromise(effectWorkflow(ctx).pipe)
+				return await Effect.runPromise(effectWorkflow(ctx).pipe(Effect.provide(MainLayer)))
 			},
 		},
 	],
