@@ -28,13 +28,16 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 
 		yield* Effect.logInfo("Syncing Collection", collection.name)
 
-		yield* db.update(schema.syncJobs).set({
-			status: "running",
-			syncJobId: ctx.data.input.syncJobId,
-			startedAt: sql`now()`,
-			completedAt: sql`NULL`,
-			canceledAt: sql`NULL`,
-		})
+		yield* db
+			.update(schema.syncJobs)
+			.set({
+				status: "running",
+				syncJobId: ctx.data.input.syncJobId,
+				startedAt: sql`now()`,
+				completedAt: sql`NULL`,
+				canceledAt: sql`NULL`,
+			})
+			.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
 
 		const childJobs = []
 
@@ -77,18 +80,24 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 
 		if (failedJobs.length > 0) {
 			// TODO: Do something smarter here with these errors
-			yield* db.update(schema.syncJobs).set({
-				status: "error",
-				errorMessage: `Failed to sync ${failedJobs.length} resources`,
-			})
+			yield* db
+				.update(schema.syncJobs)
+				.set({
+					status: "error",
+					errorMessage: `Failed to sync ${failedJobs.length} resources`,
+				})
+				.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
 
 			return { success: true }
 		}
 
-		yield* db.update(schema.syncJobs).set({
-			status: "completed",
-			completedAt: sql`now()`,
-		})
+		yield* db
+			.update(schema.syncJobs)
+			.set({
+				status: "completed",
+				completedAt: sql`now()`,
+			})
+			.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
 
 		return { success: true }
 	}).pipe(Effect.withSpan("collection-sync"))
