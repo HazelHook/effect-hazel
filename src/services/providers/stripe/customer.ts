@@ -46,10 +46,11 @@ export class StripeGetCustomersResSchema extends StripeGetMultipleSchema.extend<
 
 export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvider>()("StripeCustomerProvider", {
 	effect: Effect.gen(function* () {
-		const httpClient = yield* ResourceService
+		const resourceService = yield* ResourceService
 
-		const providerClient = httpClient.get("https://api.stripe.com/v1/", {
+		const providerClient = resourceService.init("https://api.stripe.com/v1/", {
 			itemSchema: StripeCustomerSchema,
+			paginationType: "cursor",
 			getEntry: {
 				schema: StripeCustomerSchema,
 				mapData(data) {
@@ -73,6 +74,7 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 					})
 				},
 			},
+			getCount: undefined,
 		})
 
 		return providerClient

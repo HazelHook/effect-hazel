@@ -1,6 +1,7 @@
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
 import { Effect } from "effect"
 import { MainLayer } from ".."
+import { SyncingService } from "../services/syncing-service"
 
 export type ResourceSyncWorkflowInput = {
 	collectionId: string
@@ -8,6 +9,20 @@ export type ResourceSyncWorkflowInput = {
 	providerKey: string
 	resourceSyncJobId: string
 }
+
+// TODO: Better Error Managment
+const resourceSyncWorkflowEffect = (ctx: Context<ResourceSyncWorkflowInput>) =>
+	Effect.gen(function* () {
+		const syncingService = yield* SyncingService
+
+		yield* syncingService.syncResource(
+			ctx.data.input.collectionId,
+			ctx.data.input.providerKey,
+			ctx.data.input.resourceKey,
+		)
+
+		return { success: true }
+	}).pipe(Effect.provide(MainLayer))
 
 export const resourceSyncWorkflow: Workflow = {
 	id: "resource-sync-ts",
@@ -19,11 +34,12 @@ export const resourceSyncWorkflow: Workflow = {
 		{
 			name: "sync-resource",
 			run: async (ctx: Context<ResourceSyncWorkflowInput>) => {
-				return { WOW: "SO COOL" }
+				return await Effect.runPromise(resourceSyncWorkflowEffect(ctx))
 			},
 		},
 		{
 			name: "cleanup-resource",
+			parents: ["sync-resource"],
 			run: async (ctx: Context<ResourceSyncWorkflowInput>) => {
 				return { WOW: "SO COOL CLEANUP!" }
 			},

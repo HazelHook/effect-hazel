@@ -29,3 +29,14 @@ export class CollectionNotFoundError extends Data.TaggedError("CollectionNotFoun
 		super({ message: `Collection "${collectionId}" not found.`, collectionId })
 	}
 }
+
+export class ThirdPartyConnectionNotFoundError extends Data.TaggedError("ThirdPartyConnectionNotFoundError")<{
+	message: string
+	thirdPartyConnectionId: string
+}> {
+	constructor(thirdPartyConnectionId: string) {
+		super({ message: `ThirdPartyConnection "${thirdPartyConnectionId}" not found.`, thirdPartyConnectionId })
+	}
+}
+
+export class GetCountNotImplemented extends Data.TaggedError("GetCountNotImplemented") {}

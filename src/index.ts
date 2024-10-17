@@ -23,20 +23,8 @@ export const MainLayer = Layer.mergeAll(
 const program = Effect.gen(function* () {
 	const syncingService = yield* SyncingService
 
-	yield* syncingService.syncResource("dd59064c-1615-4d0e-9897-e14a11722d04", "stripe", "customers")
+	yield* syncingService.syncResource("e76af4f0-fa25-4387-bc64-97ff310ad5f7", "stripe", "customers")
 }).pipe(Effect.provide(MainLayer))
-
-const exit = await Effect.runPromiseExit(program)
-
-Exit.match(exit, {
-	onFailure: (cause) => {
-		console.log(cause)
-		console.log("Failure!")
-	},
-	onSuccess: () => {
-		console.log("Success!")
-	},
-})
 
 // program.pipe(
 // 	Effect.catchTags({
