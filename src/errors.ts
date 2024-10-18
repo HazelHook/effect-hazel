@@ -40,3 +40,9 @@ export class ThirdPartyConnectionNotFoundError extends Data.TaggedError("ThirdPa
 }
 
 export class GetCountNotImplemented extends Data.TaggedError("GetCountNotImplemented") {}
+
+export class HazelError extends Data.TaggedError("HazelError")<{
+	code: string
+	message?: string | undefined
+	cause?: unknown
+}> {}
