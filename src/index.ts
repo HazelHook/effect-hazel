@@ -24,12 +24,15 @@ export const MainLayer = Layer.mergeAll(
 	OpenTelemtryLive,
 )
 
+const program = Effect.gen(function* (_) {
+	const worker = yield* Effect.promise(() => hatchet.worker("typescript-worker"))
+
+	worker.registerWorkflow(collectionSyncWorkflow)
+	worker.registerWorkflow(resourceSyncWorkflow)
+
+	yield* Effect.promise(() => worker.start())
+})
+
+BunRuntime.runMain(program.pipe(Effect.provide(MainLayer)))
+
 // TODO: Implement Ratelimiting for CollectionService
-// TODO: Implement Hatchet Worker Stuff
-
-const worker = await hatchet.worker("typescript-worker")
-
-worker.registerWorkflow(collectionSyncWorkflow)
-worker.registerWorkflow(resourceSyncWorkflow)
-
-await worker.start()
