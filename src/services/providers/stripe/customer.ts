@@ -1,6 +1,6 @@
 import { Schema } from "@effect/schema"
 import { Effect, Option } from "effect"
-import { ResourceService } from "../../resource-service"
+import { ResourceService } from "../../core/resource-service"
 
 export class StripeGetMultipleSchema extends Schema.Class<StripeGetMultipleSchema>("StripeGetMultiple")({
 	object: Schema.String,

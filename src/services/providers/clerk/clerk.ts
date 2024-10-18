@@ -1,5 +1,5 @@
 import { Effect, TMap } from "effect"
-import type { ResourceServiceImpl } from "../../resource-service"
+import type { ResourceServiceImpl } from "../../core/resource-service"
 import { ClerkUserProvider } from "./user"
 
 export class ClerkApi extends Effect.Service<ClerkApi>()("ClerkApi", {

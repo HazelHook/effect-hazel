@@ -1,7 +1,7 @@
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
 import { Effect } from "effect"
 import { MainLayer } from ".."
-import { SyncingService } from "../services/syncing-service"
+import { SyncingService } from "../services/core/syncing-service"
 
 export type ResourceSyncWorkflowInput = {
 	collectionId: string

@@ -8,7 +8,7 @@ import {
 import type { Schema } from "@effect/schema"
 import type { ParseError } from "@effect/schema/ParseResult"
 import { Effect, Option, Schedule } from "effect"
-import { GetCountNotImplemented } from "../errors"
+import { GetCountNotImplemented } from "../../errors"
 
 export type PaginationOffsetOptions = {
 	type: "offset"

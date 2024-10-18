@@ -1,11 +1,11 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { Config, Effect, Option, TMap } from "effect"
-import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../errors"
-import { Providers } from "./providers/providers-service"
+import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../../errors"
+import { Providers } from "../providers/providers-service"
 
 import { eq, sql } from "drizzle-orm"
-import * as schema from "../drizzle/schema"
-import type { InsertItem } from "./db-service"
+import * as schema from "../../drizzle/schema"
+import type { InsertItem } from "../db-service"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {

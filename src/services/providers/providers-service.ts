@@ -1,5 +1,5 @@
 import { Effect, TMap } from "effect"
-import type { ResourceServiceImpl } from "../resource-service"
+import type { ResourceServiceImpl } from "../core/resource-service"
 import { ClerkApi } from "./clerk/clerk"
 import { StripeApi } from "./stripe/stripe"
 

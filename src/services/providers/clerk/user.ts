@@ -1,6 +1,6 @@
 import { Schema } from "@effect/schema"
 import { Effect } from "effect"
-import { ResourceService } from "../../resource-service"
+import { ResourceService } from "../../core/resource-service"
 import { ClerkUserSchema } from "./schemas"
 
 class ClerkUserCountResSchema extends Schema.Class<ClerkUserCountResSchema>("ClerkUserCountRes")({

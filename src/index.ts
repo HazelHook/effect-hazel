@@ -3,10 +3,10 @@ import { Effect, Exit, Layer } from "effect"
 import { Providers } from "./services/providers/providers-service"
 
 import Hatchet from "@hatchet-dev/typescript-sdk"
+import { SyncingService } from "./services/core/syncing-service"
 import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
-import { SyncingService } from "./services/syncing-service"
 import { collectionSyncWorkflow } from "./workflows/collection-sync"
 import { resourceSyncWorkflow } from "./workflows/resource-sync"
 
