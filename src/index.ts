@@ -1,4 +1,4 @@
-import { Effect, Exit, Layer, Logger } from "effect"
+import { Effect, Layer } from "effect"
 
 import { Providers } from "./services/providers/providers-service"
 
@@ -22,20 +22,6 @@ export const MainLayer = Layer.mergeAll(
 	SyncingService.Default,
 	DrizzleLive,
 	OpenTelemtryLive,
-	Logger.pretty,
-)
-
-const program = Effect.gen(function* () {
-	const syncingService = yield* SyncingService
-
-	yield* syncingService.syncResource("e76af4f0-fa25-4387-bc64-97ff310ad5f7", "stripe", "customers")
-}).pipe(Effect.provide(MainLayer))
-
-program.pipe(
-	Effect.catchTags({
-		// ParseError: () => Effect.succeed("Parse error"),
-	}),
-	BunRuntime.runMain,
 )
 
 // TODO: Implement Ratelimiting for CollectionService

@@ -1,11 +1,12 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
-import { Effect, Either } from "effect"
+import { Effect, Either, Exit } from "effect"
 
+import { BunRuntime } from "@effect/platform-bun"
 import { eq, sql } from "drizzle-orm"
 import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
-import { ChildJobError, CollectionNotFoundError } from "../errors"
+import { ChildJobError, CollectionNotFoundError, HazelError } from "../errors"
 import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
 type WorkflowInput = {
@@ -112,7 +113,16 @@ export const collectionSyncWorkflow: Workflow = {
 		{
 			name: "sync",
 			run: async (ctx: Context<WorkflowInput>) => {
-				return await Effect.runPromise(effectWorkflow(ctx).pipe(Effect.provide(MainLayer)))
+				const exit = await Effect.runPromiseExit(effectWorkflow(ctx).pipe(Effect.provide(MainLayer)))
+
+				return Exit.match(exit, {
+					onFailure: (cause) => {
+						throw new Error(`Failed with failure state ${cause._tag}`)
+					},
+					onSuccess: (values) => {
+						return values
+					},
+				})
 			},
 		},
 	],
