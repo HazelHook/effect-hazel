@@ -49,7 +49,6 @@ export type ResourceServiceImpl<
 		never
 	>
 	getCount: (
-		entityType: string,
 		bearerToken: string,
 	) => Effect.Effect<number, HttpClientError.HttpClientError | ParseError | GetCountNotImplemented, never>
 }
@@ -111,7 +110,9 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								HttpClientRequest.prependUrl(baseUrl),
 								HttpClientRequest.bearerToken(bearerToken),
 								httpClient.execute,
-								Effect.flatMap(HttpClientResponse.schemaBodyJson(baseOptions.getEntry.schema)),
+								Effect.flatMap(
+									HttpClientResponse.schemaBodyJson(baseOptions.getEntry.schema, { errors: "all" }),
+								),
 								Effect.flatMap(baseOptions.getEntry.mapData),
 								Effect.scoped,
 							)
@@ -142,7 +143,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								Effect.scoped,
 							)
 						}).pipe(Effect.withSpan("getEntries")),
-					getCount: (entityType, bearerToken) =>
+					getCount: (bearerToken) =>
 						Effect.gen(function* () {
 							if (!baseOptions.getCount) {
 								return yield* new GetCountNotImplemented()

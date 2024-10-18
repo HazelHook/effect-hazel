@@ -1,5 +1,5 @@
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
-import { Effect } from "effect"
+import { Effect, Exit } from "effect"
 import { MainLayer } from ".."
 import { SyncingService } from "../services/core/syncing-service"
 

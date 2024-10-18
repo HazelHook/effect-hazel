@@ -41,7 +41,7 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 
 						while (hasMore) {
 							const { paginationInfo, items } = yield* resource.getEntries(
-								"customers",
+								resourceKey,
 								thirdPartyConnection.accessToken,
 								{
 									type: "cursor",
@@ -88,12 +88,12 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 
 					if (resource.baseOptions.paginationType === "offset") {
 						const limit = 3
-						const count = yield* resource.getCount("customers", yield* Config.string("TEST_TOKEN"))
+						const count = yield* resource.getCount(thirdPartyConnection.accessToken)
 						yield* Effect.logInfo(`Synced ${count} items for ${providerKey}:${resourceKey}`)
 
 						for (let i = 0; i < count; i += limit) {
 							const { items } = yield* resource.getEntries(
-								"customers",
+								resourceKey,
 								thirdPartyConnection.accessToken,
 								{
 									type: "offset",

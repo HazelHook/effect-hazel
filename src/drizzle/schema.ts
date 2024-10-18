@@ -13,7 +13,7 @@ export const items = pgTable(
 		collectionId: text("collection_id").notNull(),
 		externalId: text("external_id").notNull(),
 		resourceKey: text("resource_key").default("users").notNull(),
-		data: jsonb().notNull(),
+		data: jsonb("data").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
