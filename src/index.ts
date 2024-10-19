@@ -12,8 +12,6 @@ import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { collectionSyncWorkflow } from "./workflows/collection-sync"
 import { resourceSyncWorkflow } from "./workflows/resource-sync"
 
-const hatchet = Hatchet.init()
-
 export const MainLayer = Layer.mergeAll(
 	withLogFormat,
 	withMinimalLogLevel,
@@ -25,14 +23,20 @@ export const MainLayer = Layer.mergeAll(
 )
 
 const program = Effect.gen(function* (_) {
+	const hatchet = Hatchet.init()
+
 	const worker = yield* Effect.promise(() => hatchet.worker("typescript-worker"))
 
 	worker.registerWorkflow(collectionSyncWorkflow)
 	worker.registerWorkflow(resourceSyncWorkflow)
 
 	yield* Effect.promise(() => worker.start())
+
+	yield* Effect.addFinalizer(() => Effect.promise(() => worker.exitGracefully(true)))
 })
 
-BunRuntime.runMain(program.pipe(Effect.provide(MainLayer)))
+const runnable = Effect.scoped(program)
+
+BunRuntime.runMain(runnable.pipe(Effect.provide(MainLayer)))
 
 // TODO: Implement Ratelimiting for CollectionService
