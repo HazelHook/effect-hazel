@@ -7,7 +7,7 @@ export const OpenTelemtryLive = NodeSdk.layer(() => ({
 	resource: { serviceName: "provider-sync" },
 	spanProcessor: new BatchSpanProcessor(
 		new OTLPTraceExporter({
-			url: "https://otel.baselime.io/v1/traces",
+			url: "http://localhost:8000/traces",
 			headers: {
 				"x-api-key": Config.string("BASELIME_API_TOKEN"),
 			},

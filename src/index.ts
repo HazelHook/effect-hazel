@@ -17,11 +17,11 @@ const hatchet = Hatchet.init()
 export const MainLayer = Layer.mergeAll(
 	withLogFormat,
 	withMinimalLogLevel,
+	OpenTelemtryLive,
 	DevToolsLive,
 	Providers.Default,
 	SyncingService.Default,
 	DrizzleLive,
-	OpenTelemtryLive,
 )
 
 const program = Effect.gen(function* (_) {

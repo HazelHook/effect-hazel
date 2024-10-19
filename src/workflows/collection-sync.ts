@@ -101,7 +101,7 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 			.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
 
 		return { success: true }
-	}).pipe(Effect.withSpan("collection-sync"))
+	}).pipe(Effect.withSpan("collection-sync-workflow"))
 
 export const collectionSyncWorkflow: Workflow = {
 	id: "collection-sync-ts",

@@ -1,10 +1,39 @@
 import { sql } from "drizzle-orm"
-import { bigint, boolean, char, foreignKey, jsonb, pgEnum, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core"
+import {
+	bigint,
+	boolean,
+	char,
+	customType,
+	foreignKey,
+	jsonb,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	unique,
+} from "drizzle-orm/pg-core"
 
 export const connectionType = pgEnum("connection_type", ["oauth", "api_key"])
 export const provider = pgEnum("provider", ["github", "google", "clerk", "lemon_squezzy"])
 export const status = pgEnum("status", ["pending", "running", "completed", "canceled", "error"])
 export const triggerType = pgEnum("trigger_type", ["manual", "cron"])
+
+export const customJsonb = customType<{ data: any }>({
+	dataType() {
+		return "jsonb"
+	},
+	toDriver(val) {
+		return val as any
+	},
+	fromDriver(value) {
+		if (typeof value === "string") {
+			try {
+				return JSON.parse(value) as any
+			} catch {}
+		}
+		return value as any
+	},
+})
 
 export const items = pgTable(
 	"items",
@@ -13,7 +42,7 @@ export const items = pgTable(
 		collectionId: text("collection_id").notNull(),
 		externalId: text("external_id").notNull(),
 		resourceKey: text("resource_key").default("users").notNull(),
-		data: jsonb("data").notNull(),
+		data: customJsonb("data").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
