@@ -35,6 +35,8 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						Option.getOrThrowWith(() => new ResourceNotFoundError(providerKey, resourceKey)),
 					)
 
+					const limit = 50
+
 					if (resource.baseOptions.paginationType === "cursor") {
 						let hasMore = true
 						let cursorId: Option.Option<string> = Option.none()
@@ -46,7 +48,7 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								{
 									type: "cursor",
 									cursorId: cursorId,
-									limit: 3,
+									limit: limit,
 								},
 							)
 
@@ -87,7 +89,6 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 					}
 
 					if (resource.baseOptions.paginationType === "offset") {
-						const limit = 3
 						const count = yield* resource.getCount(thirdPartyConnection.accessToken)
 						yield* Effect.logInfo(`Synced ${count} items for ${providerKey}:${resourceKey}`)
 
