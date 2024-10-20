@@ -16,6 +16,7 @@ export class ClerkUserProvider extends Effect.Service<ClerkUserProvider>()("Stri
 			itemSchema: ClerkUserSchema,
 			paginationType: "offset",
 			getEntry: {
+				path: "users",
 				schema: ClerkUserSchema,
 				mapData(data) {
 					return Effect.succeed({
@@ -25,6 +26,7 @@ export class ClerkUserProvider extends Effect.Service<ClerkUserProvider>()("Stri
 				},
 			},
 			getEntries: {
+				path: "users",
 				schema: Schema.Array(ClerkUserSchema),
 				mapData(data) {
 					return Effect.succeed({

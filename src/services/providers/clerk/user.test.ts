@@ -1,7 +1,7 @@
 import { Config, Effect } from "effect"
 import { ClerkUserProvider } from "./user"
 
-import { expect, it, test } from "@effect/vitest"
+import { expect, it } from "@effect/vitest"
 
 it.effect("getEntries", () =>
 	Effect.gen(function* () {
@@ -9,7 +9,7 @@ it.effect("getEntries", () =>
 
 		const accessToken = yield* Config.string("TEST_CLERK_API_TOKEN")
 
-		const entries = yield* clerkUserProvider.getEntries("oauth", accessToken, {
+		const entries = yield* clerkUserProvider.getEntries(accessToken, {
 			type: "offset",
 			offset: 0,
 			limit: 10,

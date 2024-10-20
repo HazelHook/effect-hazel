@@ -30,12 +30,10 @@ export type ResourceServiceImpl<
 	// TODO: Get the types of these right without
 	baseOptions: BaseOptions<any, any, any, any, PaginationType>
 	getEntry: (
-		entityType: string,
 		bearerToken: string,
 		entryId: string,
 	) => Effect.Effect<{ id: string; data: Item }, HttpClientError.HttpClientError | ParseError, never>
 	getEntries: (
-		entityType: string,
 		bearerToken: string,
 		options:
 			| { type: "cursor"; cursorId: Option.Option<string>; limit: number }
@@ -63,6 +61,7 @@ export type BaseOptions<
 	paginationType: PaginationType
 	itemSchema: Schema.Schema<Item, any>
 	getEntry: {
+		path: string
 		mapData: (data: GetEntrySchema) => Effect.Effect<{ id: string; data: Item }, never, never>
 		schema: Schema.Schema<GetEntrySchema, any>
 	}
@@ -77,6 +76,7 @@ export type BaseOptions<
 }
 
 export interface GetEntries<Item, GetEntriesSchema, PaginationType = "cursor" | "offset"> {
+	path: string
 	mapData: (data: GetEntriesSchema) => Effect.Effect<
 		{
 			items: { id: string; data: Item }[]
@@ -104,9 +104,9 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 			): ResourceServiceImpl<Item, GetEntrySchema, GetEntriesSchema, GetCountSchema, PaginationType> => {
 				return {
 					baseOptions: baseOptions,
-					getEntry: (entityType, bearerToken, entryId) =>
+					getEntry: (bearerToken, entryId) =>
 						Effect.gen(function* () {
-							return yield* HttpClientRequest.get(`/${entityType}/${entryId}`).pipe(
+							return yield* HttpClientRequest.get(`/${baseOptions.getEntry.path}/${entryId}`).pipe(
 								HttpClientRequest.prependUrl(baseUrl),
 								HttpClientRequest.bearerToken(bearerToken),
 								httpClient.execute,
@@ -117,7 +117,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								Effect.scoped,
 							)
 						}).pipe(Effect.withSpan("getEntry")),
-					getEntries: (entityType, bearerToken, options) =>
+					getEntries: (bearerToken, options) =>
 						Effect.gen(function* () {
 							const params = new URLSearchParams()
 
@@ -133,7 +133,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								params.set("offset", String(options.offset))
 							}
 
-							return yield* HttpClientRequest.get(`/${entityType}`).pipe(
+							return yield* HttpClientRequest.get(`/${baseOptions.getEntries.path}`).pipe(
 								HttpClientRequest.prependUrl(baseUrl),
 								HttpClientRequest.bearerToken(bearerToken),
 								HttpClientRequest.appendUrlParams(params),

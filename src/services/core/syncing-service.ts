@@ -43,7 +43,6 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 
 						while (hasMore) {
 							const { paginationInfo, items } = yield* resource.getEntries(
-								resourceKey,
 								thirdPartyConnection.accessToken,
 								{
 									type: "cursor",
@@ -93,15 +92,11 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						yield* Effect.logInfo(`Synced ${count} items for ${providerKey}:${resourceKey}`)
 
 						for (let i = 0; i < count; i += limit) {
-							const { items } = yield* resource.getEntries(
-								resourceKey,
-								thirdPartyConnection.accessToken,
-								{
-									type: "offset",
-									offset: i,
-									limit: limit,
-								},
-							)
+							const { items } = yield* resource.getEntries(thirdPartyConnection.accessToken, {
+								type: "offset",
+								offset: i,
+								limit: limit,
+							})
 
 							const dbItems: InsertItem[] = items.map((item) => {
 								return {

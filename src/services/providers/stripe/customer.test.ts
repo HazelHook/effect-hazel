@@ -10,7 +10,7 @@ describe("stripe customer provider", () => {
 
 			const accessToken = yield* Config.string("TEST_STRIPE_API_TOKEN")
 
-			const entries = yield* stripeCustomerProvider.getEntries("customers", accessToken, {
+			const entries = yield* stripeCustomerProvider.getEntries(accessToken, {
 				type: "cursor",
 				cursorId: Option.none(),
 				limit: 10,

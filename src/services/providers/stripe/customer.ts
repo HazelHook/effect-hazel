@@ -20,6 +20,7 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 			itemSchema: StripeCustomer,
 			paginationType: "cursor",
 			getEntry: {
+				path: "customers",
 				schema: StripeCustomer,
 				mapData(data) {
 					return Effect.succeed({
@@ -29,6 +30,7 @@ export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvide
 				},
 			},
 			getEntries: {
+				path: "customers",
 				schema: GetCustomerEntriesSchema,
 				mapData(data) {
 					const cursorId = data.data[data.data.length - 1]?.id
