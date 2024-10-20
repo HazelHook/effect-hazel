@@ -4,7 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "NODE_ENV=development bun --hot run src/index.ts",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"db:pull": "drizzle-kit pull"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

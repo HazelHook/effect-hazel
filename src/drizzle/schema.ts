@@ -14,7 +14,7 @@ import {
 } from "drizzle-orm/pg-core"
 
 export const connectionType = pgEnum("connection_type", ["oauth", "api_key"])
-export const provider = pgEnum("provider", ["github", "google", "clerk", "lemon_squezzy"])
+export const provider = pgEnum("provider", ["github", "google", "clerk", "lemon_squezzy", "stripe"])
 export const status = pgEnum("status", ["pending", "running", "completed", "canceled", "error"])
 export const triggerType = pgEnum("trigger_type", ["manual", "cron"])
 
@@ -35,68 +35,16 @@ export const customJsonb = customType<{ data: any }>({
 	},
 })
 
-export const items = pgTable(
-	"items",
-	{
-		id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
-		collectionId: text("collection_id").notNull(),
-		externalId: text("external_id").notNull(),
-		resourceKey: text("resource_key").default("users").notNull(),
-		data: customJsonb("data").notNull(),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-		lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-	},
-	(table) => {
-		return {
-			itemsCollectionIdFkey: foreignKey({
-				columns: [table.collectionId],
-				foreignColumns: [collections.id],
-				name: "items_collection_id_fkey",
-			}),
-			itemsExternalIdCollectionIdKey: unique("items_external_id_collection_id_key").on(
-				table.collectionId,
-				table.externalId,
-			),
-		}
-	},
-)
-
 export const collections = pgTable("collections", {
 	id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
 	name: text().notNull(),
 	providerId: provider("provider_id").notNull(),
-	resources: text().array().notNull(),
+	resources: text().array(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
 	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
 	tenantId: text("tenant_id").notNull(),
 })
-
-export const thirdPartyConnections = pgTable(
-	"third_party_connections",
-	{
-		id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
-		collectionId: text("collection_id").notNull(),
-		type: connectionType().notNull(),
-		provider: text().notNull(),
-		accessToken: text("access_token").notNull(),
-		refreshToken: text("refresh_token"),
-		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
-		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
-	},
-	(table) => {
-		return {
-			thirdPartyConnectionsCollectionIdFkey: foreignKey({
-				columns: [table.collectionId],
-				foreignColumns: [collections.id],
-				name: "third_party_connections_collection_id_fkey",
-			}),
-		}
-	},
-)
 
 export const syncJobs = pgTable(
 	"sync_jobs",
@@ -128,6 +76,58 @@ export const syncJobs = pgTable(
 				foreignColumns: [table.id],
 				name: "sync_jobs_sync_job_id_fkey",
 			}),
+		}
+	},
+)
+
+export const thirdPartyConnections = pgTable(
+	"third_party_connections",
+	{
+		id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
+		collectionId: text("collection_id").notNull(),
+		type: connectionType().notNull(),
+		provider: text().notNull(),
+		accessToken: text("access_token").notNull(),
+		refreshToken: text("refresh_token"),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+	},
+	(table) => {
+		return {
+			thirdPartyConnectionsCollectionIdFkey: foreignKey({
+				columns: [table.collectionId],
+				foreignColumns: [collections.id],
+				name: "third_party_connections_collection_id_fkey",
+			}),
+		}
+	},
+)
+
+export const items = pgTable(
+	"items",
+	{
+		id: text().default(sql`gen_random_uuid()`).primaryKey().notNull(),
+		collectionId: text("collection_id").notNull(),
+		externalId: text("external_id").notNull(),
+		resourceKey: text("resource_key").default("users").notNull(),
+		data: jsonb().notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+		deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+		lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: "string" }).defaultNow().notNull(),
+	},
+	(table) => {
+		return {
+			itemsCollectionIdFkey: foreignKey({
+				columns: [table.collectionId],
+				foreignColumns: [collections.id],
+				name: "items_collection_id_fkey",
+			}),
+			itemsExternalIdCollectionIdKey: unique("items_external_id_collection_id_key").on(
+				table.collectionId,
+				table.externalId,
+			),
 		}
 	},
 )
