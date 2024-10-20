@@ -7,7 +7,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.3",
+		"@biomejs/biome": "1.9.4",
 		"@types/bun": "1.1.11",
 		"drizzle-kit": "^0.26.2",
 		"typescript": "^5.6.3"
@@ -27,7 +27,7 @@
 		"@opentelemetry/sdk-trace-base": "^1.26.0",
 		"@opentelemetry/sdk-trace-node": "^1.26.0",
 		"@opentelemetry/sdk-trace-web": "^1.26.0",
-		"drizzle-orm": "^0.35.1",
+		"drizzle-orm": "^0.35.2",
 		"effect": "^3.9.2"
 	}
 }

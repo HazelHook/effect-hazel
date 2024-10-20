@@ -9,6 +9,7 @@ import { SyncingService } from "./services/core/syncing-service"
 import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
+import { SyncJobService } from "./services/sync-jobs-service"
 import { collectionSyncWorkflow } from "./workflows/collection-sync"
 import { resourceSyncWorkflow } from "./workflows/resource-sync"
 
@@ -19,6 +20,7 @@ export const MainLayer = Layer.mergeAll(
 	DevToolsLive,
 	Providers.Default,
 	SyncingService.Default,
+	SyncJobService.Default,
 	DrizzleLive,
 )
 

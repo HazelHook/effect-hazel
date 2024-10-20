@@ -7,6 +7,7 @@ import { eq, sql } from "drizzle-orm"
 import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
 import { ChildJobError, CollectionNotFoundError, HazelError } from "../errors"
+import { SyncJobService } from "../services/sync-jobs-service"
 import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
 type WorkflowInput = {
@@ -17,6 +18,8 @@ type WorkflowInput = {
 const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 	Effect.gen(function* () {
 		const db = yield* PgDrizzle
+
+		const syncJobService = yield* SyncJobService
 
 		const collection = (yield* db
 			.select()
@@ -29,20 +32,12 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 
 		yield* Effect.logInfo("Syncing Collection", collection.name)
 
-		yield* db
-			.update(schema.syncJobs)
-			.set({
-				status: "running",
-				syncJobId: ctx.data.input.syncJobId,
-				startedAt: sql`now()`,
-				completedAt: sql`NULL`,
-				canceledAt: sql`NULL`,
-			})
-			.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
+		yield* syncJobService.startSyncJob(ctx.data.input.syncJobId, ctx.workflowRunId())
 
 		const childJobs = []
 
 		for (const resource of collection.resources) {
+			// TODO: Extract to service
 			const resourceSyncJob = (yield* db
 				.insert(schema.syncJobs)
 				.values({
@@ -81,24 +76,16 @@ const effectWorkflow = (ctx: Context<WorkflowInput>) =>
 
 		if (failedJobs.length > 0) {
 			// TODO: Do something smarter here with these errors
-			yield* db
-				.update(schema.syncJobs)
-				.set({
-					status: "error",
-					errorMessage: `Failed to sync ${failedJobs.length} resources`,
-				})
-				.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
+			yield* syncJobService.setSyncJobStatus(
+				ctx.data.input.syncJobId,
+				"error",
+				`Failed to sync ${failedJobs.length} resources`,
+			)
 
 			return { success: true }
 		}
 
-		yield* db
-			.update(schema.syncJobs)
-			.set({
-				status: "completed",
-				completedAt: sql`now()`,
-			})
-			.where(eq(schema.syncJobs.id, ctx.data.input.syncJobId))
+		yield* syncJobService.setSyncJobStatus(ctx.data.input.syncJobId, "completed")
 
 		return { success: true }
 	}).pipe(Effect.withSpan("collection-sync-workflow"))

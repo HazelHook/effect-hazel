@@ -2,7 +2,7 @@ import { PgClient } from "@effect/sql-pg"
 import { Config, ConfigError, Effect, Layer, Match } from "effect"
 
 import * as PgDrizzle from "@effect/sql-drizzle/Pg"
-import type { InferInsertModel } from "drizzle-orm"
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 
 import type * as schema from "../drizzle/schema"
 import { HazelError } from "../errors"
@@ -30,3 +30,4 @@ const MappedPgLive = Layer.mapError(PgLive, (err) => {
 export const DrizzleLive = PgDrizzle.layer.pipe(Layer.provide(MappedPgLive))
 
 export type InsertItem = InferInsertModel<typeof schema.items>
+export type SyncJob = InferSelectModel<typeof schema.syncJobs>
