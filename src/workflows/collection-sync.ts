@@ -96,6 +96,7 @@ export const collectionSyncWorkflow: Workflow = {
 	on: {
 		event: "collection:sync",
 	},
+	scheduleTimeout: "36h",
 	steps: [
 		{
 			name: "sync",

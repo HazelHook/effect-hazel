@@ -30,6 +30,7 @@ export const resourceSyncWorkflow: Workflow = {
 	on: {
 		event: "resource:sync",
 	},
+	scheduleTimeout: "36h",
 	steps: [
 		{
 			name: "sync-resource",

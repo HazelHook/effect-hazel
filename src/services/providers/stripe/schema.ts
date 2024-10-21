@@ -63,10 +63,10 @@ export class StripeCustomer extends S.Class<StripeCustomer>("StripeCustomer")({
 	test_clock: S.NullOr(S.String),
 
 	// Additional fields
-	cash_balance: S.NullOr(S.Any), // Cash balance object
-	default_currency: S.NullOr(S.String),
-	deleted: S.NullOr(S.Boolean),
-	sources: S.NullOr(S.Any), // List object
-	subscriptions: S.NullOr(S.Any), // List object
-	tax_ids: S.NullOr(S.Any), // List object
+	cash_balance: S.NullishOr(S.Any), // Cash balance object
+	default_currency: S.NullishOr(S.String),
+	deleted: S.NullishOr(S.Boolean),
+	sources: S.NullishOr(S.Any), // List object
+	subscriptions: S.NullishOr(S.Any), // List object
+	tax_ids: S.NullishOr(S.Any), // List object
 }) {}
