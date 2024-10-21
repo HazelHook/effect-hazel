@@ -1,4 +1,3 @@
-import { Schema } from "@effect/schema"
 import { Effect, Option } from "effect"
 import { ResourceService } from "../../core/resource-service"
 
@@ -6,10 +5,10 @@ import * as S from "@effect/schema/Schema"
 import { StripeCustomer } from "./schema"
 
 class GetCustomerEntriesSchema extends S.Class<GetCustomerEntriesSchema>("GetCustomerEntriesSchema")({
-	object: S.String,
+	object: S.Literal("list"),
 	data: S.Array(StripeCustomer),
 	has_more: S.Boolean,
-	url: S.String,
+	url: S.Literal("/v1/customers"),
 }) {}
 
 export class StripeCustomerProvider extends Effect.Service<StripeCustomerProvider>()("StripeCustomerProvider", {

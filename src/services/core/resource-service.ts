@@ -113,6 +113,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								Effect.flatMap(
 									HttpClientResponse.schemaBodyJson(baseOptions.getEntry.schema, { errors: "all" }),
 								),
+								Effect.tapError((e) => Effect.logError("Error", e)),
 								Effect.flatMap(baseOptions.getEntry.mapData),
 								Effect.scoped,
 							)
@@ -139,6 +140,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								HttpClientRequest.appendUrlParams(params),
 								httpClient.execute,
 								Effect.flatMap(HttpClientResponse.schemaBodyJson(baseOptions.getEntries.schema)),
+								Effect.tapError((e) => Effect.logError("Error", e)),
 								Effect.flatMap(baseOptions.getEntries.mapData),
 								Effect.scoped,
 							)
