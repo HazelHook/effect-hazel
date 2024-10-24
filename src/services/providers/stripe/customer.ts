@@ -1,7 +1,6 @@
-import { Effect, Option } from "effect"
+import { Effect, Option, Schema as S } from "effect"
 import { ResourceService } from "../../core/resource-service"
 
-import * as S from "@effect/schema/Schema"
 import { StripeCustomer } from "./schema"
 
 class GetCustomerEntriesSchema extends S.Class<GetCustomerEntriesSchema>("GetCustomerEntriesSchema")({

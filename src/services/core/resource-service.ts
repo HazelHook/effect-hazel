@@ -5,9 +5,8 @@ import {
 	HttpClientRequest,
 	HttpClientResponse,
 } from "@effect/platform"
-import type { Schema } from "@effect/schema"
-import type { ParseError } from "@effect/schema/ParseResult"
-import { Effect, Option, Schedule } from "effect"
+import { Effect, Option, Schedule, type Schema } from "effect"
+import type { ParseError } from "effect/ParseResult"
 import { GetCountNotImplemented } from "../../errors"
 
 export type PaginationOffsetOptions = {

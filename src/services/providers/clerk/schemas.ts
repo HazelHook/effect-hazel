@@ -1,4 +1,4 @@
-import { Schema } from "@effect/schema"
+import { Schema } from "effect"
 
 export class ClerkEmailAddressSchema extends Schema.Class<ClerkEmailAddressSchema>("ClerkEmailAddress")({
 	id: Schema.String,
