@@ -42,10 +42,13 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const collectionId = new URL(request.url).searchParams.get("collectionId")
 
+		if (!collectionId) {
+			return Response.json({ status: "error", message: "Collection Id is required." })
+		}
+
 		const workflow = await env.RESOURCE_SYNC_WORKFLOW.create({
-			id: "resource-sync-workflow",
 			params: {
-				collectionId: collectionId || "8106d54c-b6b1-4c75-80ad-11213cc1d99c",
+				collectionId: collectionId,
 				providerKey: "clerk",
 				resourceKey: "users",
 			},
