@@ -40,10 +40,12 @@ type Env = {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+		const collectionId = new URL(request.url).searchParams.get("collectionId")
+
 		const workflow = await env.RESOURCE_SYNC_WORKFLOW.create({
 			id: "resource-sync-workflow",
 			params: {
-				collectionId: "8106d54c-b6b1-4c75-80ad-11213cc1d99c",
+				collectionId: collectionId || "8106d54c-b6b1-4c75-80ad-11213cc1d99c",
 				providerKey: "clerk",
 				resourceKey: "users",
 			},
