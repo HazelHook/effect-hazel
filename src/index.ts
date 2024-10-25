@@ -40,6 +40,13 @@ type Env = {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+		const workflowId = new URL(request.url).searchParams.get("workflowId")
+
+		if (workflowId) {
+			const workflow = await env.RESOURCE_SYNC_WORKFLOW.get(workflowId)
+			return Response.json({ status: await workflow.status(), id: workflow.id })
+		}
+
 		const collectionId = new URL(request.url).searchParams.get("collectionId")
 
 		if (!collectionId) {
@@ -54,7 +61,7 @@ export default {
 			},
 		})
 
-		return Response.json({ status: await workflow.status() })
+		return Response.json({ status: await workflow.status(), id: workflow.id })
 	},
 } satisfies ExportedHandler<Env>
 
