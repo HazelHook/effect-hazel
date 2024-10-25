@@ -141,6 +141,8 @@ export class ResourceService extends Effect.Service<ResourceService>()("Collecti
 								Effect.flatMap(HttpClientResponse.schemaBodyJson(baseOptions.getEntries.schema)),
 								Effect.tapError((e) => Effect.logError("Error", e)),
 								Effect.flatMap(baseOptions.getEntries.mapData),
+								Effect.map(JSON.stringify),
+								Effect.map(JSON.parse),
 								Effect.scoped,
 							)
 						}).pipe(Effect.withSpan("getEntries")),

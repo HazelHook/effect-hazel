@@ -4,14 +4,14 @@ import { Providers } from "./services/providers/providers-service"
 
 import { BunRuntime } from "@effect/platform-bun"
 import Hatchet from "@hatchet-dev/typescript-sdk"
+import { collectionSyncWorkflow } from "./hatchet-workflows/collection-sync"
+import { resourceSyncWorkflow } from "./hatchet-workflows/resource-sync"
 import { withLogFormat, withMinimalLogLevel } from "./lib/logger"
 import { SyncingService } from "./services/core/syncing-service"
 import { DrizzleLive } from "./services/db-service"
 import { DevToolsLive } from "./services/devtools-service"
 import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { SyncJobService } from "./services/sync-jobs-service"
-import { collectionSyncWorkflow } from "./workflows/collection-sync"
-import { resourceSyncWorkflow } from "./workflows/resource-sync"
 
 export const MainLayer = Layer.mergeAll(
 	withLogFormat,

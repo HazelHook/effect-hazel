@@ -1,6 +1,6 @@
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
 import { Effect, Exit } from "effect"
-import { MainLayer } from "../old-index"
+import { MainLayer } from "../bun-runtime"
 import { SyncingService } from "../services/core/syncing-service"
 
 export type ResourceSyncWorkflowInput = {
