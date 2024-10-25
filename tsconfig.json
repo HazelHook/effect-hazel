@@ -20,6 +20,8 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
 
+		"types": ["@cloudflare/workers-types/2023-07-01"],
+
 		// Some stricter flags (disabled by default)
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,

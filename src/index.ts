@@ -1,44 +1,39 @@
-import { Effect, Layer } from "effect"
+import { Config, ConfigProvider, Effect, Layer } from "effect"
 
-import { Providers } from "./services/providers/providers-service"
+type Env = {
+	FIRST_WORKFLOW: Workflow
+	POSTGRES_URL: string
+	// SECOND_WORKFLOW: Workflow
+}
 
-import { BunRuntime } from "@effect/platform-bun"
-import Hatchet from "@hatchet-dev/typescript-sdk"
-import { withLogFormat, withMinimalLogLevel } from "./lib/logger"
-import { SyncingService } from "./services/core/syncing-service"
-import { DrizzleLive } from "./services/db-service"
-import { DevToolsLive } from "./services/devtools-service"
-import { OpenTelemtryLive } from "./services/open-telemntry-service"
-import { SyncJobService } from "./services/sync-jobs-service"
-import { collectionSyncWorkflow } from "./workflows/collection-sync"
-import { resourceSyncWorkflow } from "./workflows/resource-sync"
+/**
+ * Welcome to Cloudflare Workers! This is your first worker.
+ *
+ * - Run `npm run dev` in your terminal to start a development server
+ * - Open a browser tab at http://localhost:8787/ to see your worker in action
+ * - Run `npm run deploy` to publish your worker
+ *
+ * Bind resources to your worker in `wrangler.toml`. After adding bindings, a type definition for the
+ * `Env` object can be regenerated with `npm run cf-typegen`.
+ *
+ * Learn more at https://developers.cloudflare.com/workers/
+ */
 
-export const MainLayer = Layer.mergeAll(
-	withLogFormat,
-	withMinimalLogLevel,
-	OpenTelemtryLive,
-	DevToolsLive,
-	Providers.Default,
-	SyncingService.Default,
-	SyncJobService.Default,
-	DrizzleLive,
-)
+const program = Effect.gen(function* () {
+	const postgresUrl = yield* Config.string("POSTGRES_URL")
+	yield* Effect.logInfo(postgresUrl)
+	yield* Effect.logInfo("Hello World")
 
-const program = Effect.gen(function* (_) {
-	const hatchet = Hatchet.init()
-
-	const worker = yield* Effect.promise(() => hatchet.worker("typescript-worker"))
-
-	worker.registerWorkflow(collectionSyncWorkflow)
-	worker.registerWorkflow(resourceSyncWorkflow)
-
-	yield* Effect.promise(() => worker.start())
-
-	yield* Effect.addFinalizer(() => Effect.promise(() => worker.exitGracefully(true)))
+	return postgresUrl
 })
 
-const runnable = Effect.scoped(program)
+export default {
+	async fetch(request, env, ctx): Promise<Response> {
+		const configProvider = ConfigProvider.fromJson(env)
+		const configLayer = Layer.setConfigProvider(configProvider)
 
-BunRuntime.runMain(runnable.pipe(Effect.provide(MainLayer)))
+		const test = await Effect.runPromise(program.pipe(Effect.provide(configLayer)))
 
-// TODO: Implement Ratelimiting for CollectionService
+		return Response.json({ test })
+	},
+} satisfies ExportedHandler<Env>
