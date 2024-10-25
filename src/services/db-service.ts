@@ -6,9 +6,11 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 
 import type * as schema from "../drizzle/schema"
 import { HazelError } from "../errors"
+import { IsDevelopment } from "../lib/config"
 
 const PgLive = PgClient.layer({
 	url: Config.redacted("POSTGRES_URL"),
+	ssl: IsDevelopment.pipe((v) => Config.succeed(!v)),
 })
 
 const MappedPgLive = Layer.mapError(PgLive, (err) => {
@@ -19,6 +21,8 @@ const MappedPgLive = Layer.mapError(PgLive, (err) => {
 			cause: err,
 		})
 	}
+
+	console.log(err)
 
 	return new HazelError({
 		code: "CANNOT_REACH_SERVER",
