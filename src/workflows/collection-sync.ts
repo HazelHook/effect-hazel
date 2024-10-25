@@ -2,7 +2,6 @@ import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
 import { Effect, Either, Exit } from "effect"
 
-import { BunRuntime } from "@effect/platform-bun"
 import { eq, sql } from "drizzle-orm"
 import * as schema from "../drizzle/schema"
 import { ChildJobError, CollectionNotFoundError, HazelError } from "../errors"

@@ -15,11 +15,12 @@ const resourceSyncWorkflowEffect = (ctx: Context<ResourceSyncWorkflowInput>) =>
 	Effect.gen(function* () {
 		const syncingService = yield* SyncingService
 
-		yield* syncingService.syncResource(
-			ctx.data.input.collectionId,
-			ctx.data.input.providerKey,
-			ctx.data.input.resourceKey,
-		)
+		// yield* syncingService.syncResource(
+		// 	ctx.data.input.collectionId,
+		// 	ctx.data.input.providerKey,
+		// 	ctx.data.input.resourceKey,
+		// 	"WOW",
+		// )
 
 		return { success: true }
 	}).pipe(Effect.provide(MainLayer))

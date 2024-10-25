@@ -3,27 +3,41 @@ import { Config, Effect, Option, TMap } from "effect"
 import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../../errors"
 import { Providers } from "../providers/providers-service"
 
+import type { WorkflowStep } from "cloudflare:workers"
 import { eq, sql } from "drizzle-orm"
+import type { PgRemoteDatabase } from "drizzle-orm/pg-proxy"
 import * as schema from "../../drizzle/schema"
+import { stepEffect } from "../../lib/step-effect"
 import type { InsertItem } from "../db-service"
+
+const getThirdPartyConnection = (collectionId: string, db: PgRemoteDatabase<Record<string, never>>) =>
+	Effect.gen(function* () {
+		const thirdPartyConnection = (yield* db
+			.select()
+			.from(schema.thirdPartyConnections)
+			.where(eq(schema.thirdPartyConnections.collectionId, collectionId)))[0]
+
+		if (!thirdPartyConnection) {
+			return yield* new ThirdPartyConnectionNotFoundError(collectionId)
+		}
+
+		return thirdPartyConnection
+	})
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
 		const providers = yield* Providers
 
 		return {
-			syncResource: (collectionId: string, providerKey: string, resourceKey: string) =>
+			syncResource: (collectionId: string, providerKey: string, resourceKey: string, step: WorkflowStep) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
 
-					const thirdPartyConnection = (yield* db
-						.select()
-						.from(schema.thirdPartyConnections)
-						.where(eq(schema.thirdPartyConnections.collectionId, collectionId)))[0]
-
-					if (!thirdPartyConnection) {
-						return yield* new ThirdPartyConnectionNotFoundError(collectionId)
-					}
+					const thirdPartyConnection = yield* stepEffect(
+						step,
+						"getThirdPartyConnection",
+						getThirdPartyConnection(collectionId, db),
+					)
 
 					const provider = yield* Effect.map(
 						TMap.get(providers, providerKey),

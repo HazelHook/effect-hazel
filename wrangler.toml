@@ -2,6 +2,7 @@
 name = "hazel-cf"
 main = "src/index.ts"
 compatibility_date = "2024-10-22"
+compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
@@ -11,6 +12,7 @@ head_sampling_rate = 1 # optional. default = 1.
 name = "resource-sync-workflow"
 binding = "RESOURCE_SYNC_WORKFLOW"
 class_name = "ResourceSyncWorkflow"
+
 
 # [[workflows]]
 # name = "second-workflow"
