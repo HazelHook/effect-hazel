@@ -10,7 +10,7 @@ import { IsDevelopment } from "../lib/config"
 
 const PgLive = PgClient.layer({
 	url: Config.redacted("POSTGRES_URL"),
-	ssl: IsDevelopment.pipe((v) => Config.succeed(!v)),
+	ssl: IsDevelopment.pipe((v) => Config.succeed(true)),
 })
 
 const MappedPgLive = Layer.mapError(PgLive, (err) => {
