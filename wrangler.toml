@@ -14,10 +14,6 @@ binding = "RESOURCE_SYNC_WORKFLOW"
 class_name = "ResourceSyncWorkflow"
 
 
-[vars]
-isDev = true
-
-
 # [[workflows]]
 # name = "second-workflow"
 # binding = "SECOND_WORKFLOW"
