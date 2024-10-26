@@ -4,11 +4,14 @@
  * @returns {Promise<any>} - The result of the RPC call.
  */
 export async function executeRpcWithCleanup(rpcCall: () => Promise<any>): Promise<any> {
+	console.log("START")
+
 	let rpcResult = null
 	try {
 		rpcResult = await rpcCall()
 		return rpcResult
 	} finally {
+		console.log("FINAL")
 		if (rpcResult && typeof rpcResult[Symbol.dispose] === "function") {
 			console.info("Disposing RPC result")
 			rpcResult[Symbol.dispose]()

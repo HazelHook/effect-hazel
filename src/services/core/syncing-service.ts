@@ -1,5 +1,5 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
-import { Config, Effect, Option, TMap, pipe } from "effect"
+import { Config, Console, Effect, Option, TMap, pipe } from "effect"
 import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../../errors"
 import { Providers } from "../providers/providers-service"
 
@@ -74,6 +74,8 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 			syncResource: (collectionId: string, providerKey: string, resourceKey: string, step: WorkflowStep) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
+
+					yield* Console.log("Syncing Resource", collectionId, providerKey, resourceKey)
 
 					const thirdPartyConnection = yield* stepEffect(
 						step,

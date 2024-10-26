@@ -61,7 +61,9 @@ export default {
 			},
 		})
 
-		return Response.json({ status: await workflow.status(), id: workflow.id })
+		const status = await workflow.status()
+
+		return Response.json({ status: status, id: workflow.id })
 	},
 } satisfies ExportedHandler<Env>
 
@@ -72,22 +74,17 @@ type ResourceSyncWorkflowParams = {
 	resourceSyncJobId: string
 }
 
+const syncResourceProgram = (collectionId: string, providerKey: string, resourceKey: string, step: WorkflowStep) =>
+	Effect.gen(function* () {
+		const syncingService = yield* SyncingService
+
+		yield* syncingService.syncResource(collectionId, providerKey, resourceKey, step)
+
+		return { success: true }
+	})
+
 export class ResourceSyncWorkflow extends WorkflowEntrypoint<Env, ResourceSyncWorkflowParams> {
 	async run(event: Readonly<WorkflowEvent<ResourceSyncWorkflowParams>>, step: WorkflowStep): Promise<unknown> {
-		const syncResourceProgram = (
-			collectionId: string,
-			providerKey: string,
-			resourceKey: string,
-			step: WorkflowStep,
-		) =>
-			Effect.gen(function* () {
-				const syncingService = yield* SyncingService
-
-				yield* syncingService.syncResource(collectionId, providerKey, resourceKey, step)
-
-				return { success: true }
-			})
-
 		const configProvider = ConfigProvider.fromJson(this.env)
 		const configLayer = Layer.setConfigProvider(configProvider)
 
