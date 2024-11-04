@@ -1,5 +1,5 @@
 import { PgClient } from "@effect/sql-pg"
-import { Config, ConfigError, Effect, Layer, Match } from "effect"
+import { Config, ConfigError, Effect, Layer, Match, Redacted } from "effect"
 
 import * as PgDrizzle from "@effect/sql-drizzle/Pg"
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
@@ -7,7 +7,7 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 import type * as schema from "../drizzle/schema"
 import { HazelError } from "../errors"
 
-const PgLive = PgClient.layer({
+const PgLive = PgClient.layerConfig({
 	url: Config.redacted("POSTGRES_URL"),
 })
 
