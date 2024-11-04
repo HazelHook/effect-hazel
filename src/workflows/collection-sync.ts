@@ -2,11 +2,10 @@ import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
 import { Effect, Either, Exit } from "effect"
 
-import { BunRuntime } from "@effect/platform-bun"
-import { eq, sql } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
-import { ChildJobError, CollectionNotFoundError, HazelError } from "../errors"
+import { ChildJobError, CollectionNotFoundError } from "../errors"
 import { SyncJobService } from "../services/sync-jobs-service"
 import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
