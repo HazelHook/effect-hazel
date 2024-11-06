@@ -87,7 +87,7 @@ export interface GetEntries<Item, GetEntriesSchema, PaginationType = "cursor" | 
 	schema: Schema.Schema<GetEntriesSchema, any>
 }
 
-export class ResourceService extends Effect.Service<ResourceService>()("CollectionService", {
+export class ResourceService extends Effect.Service<ResourceService>()("ResourceService", {
 	effect: Effect.gen(function* () {
 		const defaultClient = yield* HttpClient.HttpClient
 

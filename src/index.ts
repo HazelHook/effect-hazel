@@ -4,6 +4,7 @@ import { Providers } from "./services/providers/providers-service"
 
 import { BunRuntime } from "@effect/platform-bun"
 import Hatchet from "@hatchet-dev/typescript-sdk"
+import { HazelError } from "./errors"
 import { withLogFormat, withMinimalLogLevel } from "./lib/logger"
 import { SyncingService } from "./services/core/syncing-service"
 import { DrizzleLive } from "./services/db-service"
@@ -24,10 +25,24 @@ export const MainLayer = Layer.mergeAll(
 	DrizzleLive,
 )
 
-const program = Effect.gen(function* (_) {
+const workerAcquire = Effect.gen(function* () {
 	const hatchet = Hatchet.init()
 
-	const worker = yield* Effect.promise(() => hatchet.worker("typescript-worker"))
+	return yield* Effect.tryPromise({
+		try: () => hatchet.worker("typescript-worker"),
+		catch: (e) =>
+			new HazelError({
+				code: "WORKER_NOT_FOUND",
+				message: "Worker not found",
+				cause: e,
+			}),
+	})
+})
+
+const program = Effect.gen(function* (_) {
+	const worker = yield* Effect.acquireRelease(workerAcquire, (worker) =>
+		Effect.promise(() => worker.exitGracefully(true)),
+	)
 
 	worker.registerWorkflow(collectionSyncWorkflow)
 	worker.registerWorkflow(resourceSyncWorkflow)
