@@ -89,7 +89,7 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 									catch: (e) => Effect.fail(e),
 								})
 
-								return null
+								return true
 							}),
 						nack: (messageId: string) =>
 							Effect.gen(function* () {
