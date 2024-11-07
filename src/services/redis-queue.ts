@@ -1,3 +1,4 @@
+import { BunRuntime } from "@effect/platform-bun"
 import { Effect, Schema } from "effect"
 
 import { Redis } from "ioredis"
@@ -74,6 +75,8 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 
 								const parsedMessage = yield* Schema.decodeUnknown(Message)(JSON.parse(item))
 
+								yield* Effect.logInfo(`Dequeued ${parsedMessage.id} for ${name}`)
+
 								return parsedMessage
 							}),
 						ack: (messageId: string) =>
@@ -89,30 +92,23 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 									catch: (e) => Effect.fail(e),
 								})
 
+								yield* Effect.logInfo(`Acked ${messageId} for ${name}`)
+
 								return true
 							}),
 						nack: (messageId: string) =>
 							Effect.gen(function* () {
-								const message = yield* Effect.tryPromise({
-									try: () => redis.hget(getQueueName("hashed"), messageId),
-									catch: (e) => Effect.fail(e),
-								})
-
-								if (!message) {
-									return yield* Effect.fail("Message not found")
-								}
-
-								const parsedMessage = yield* Schema.decodeUnknown(Message)(JSON.parse(message))
-
-								const xd = yield* Effect.tryPromise({
+								yield* Effect.tryPromise({
 									try: () =>
-										redis.brpoplpush(
-											getQueueName("processing"),
-											getQueueName("pending"),
-											messageId,
-										),
+										redis
+											.multi()
+											.lrem(getQueueName("processing"), 1, messageId)
+											.lpush(getQueueName("pending"), messageId)
+											.exec(),
 									catch: (e) => Effect.fail(e),
 								})
+
+								yield* Effect.logInfo(`Nacked ${messageId} for ${name}`)
 							}),
 					}
 				}),
@@ -121,19 +117,24 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 }) {}
 
 const program = Effect.gen(function* () {
+	const start = yield* Effect.succeed(Date.now())
 	const redisService = yield* RedisService
 	const queue = yield* redisService.new("test")
-	yield* queue.enqueue("hello")
-	yield* queue.enqueue("hello2")
-	yield* queue.enqueue("hello3")
+
+	yield* queue.enqueue("hello").pipe(Effect.repeatN(1000))
 
 	const item = yield* queue.dequeue()
-
-	console.log(item)
 
 	if (!item) return
 
 	yield* queue.ack(item.id)
+
+	const item2 = yield* queue.dequeue()
+
+	if (!item2) return
+
+	yield* queue.nack(item2.id)
+	yield* Effect.logInfo(`Took ${Date.now() - start}ms`)
 }).pipe(Effect.provide(RedisService.Default), Effect.scoped)
 
-Effect.runPromise(program)
+program.pipe(BunRuntime.runMain)
