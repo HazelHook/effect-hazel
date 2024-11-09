@@ -14,7 +14,7 @@ const Message = Schema.Struct({
 	payload: Schema.Any,
 })
 
-export class RedisService extends Effect.Service<RedisService>()("RedisService", {
+export class RedisQueueService extends Effect.Service<RedisQueueService>()("RedisQueueService", {
 	effect: Effect.gen(function* () {
 		const redis = yield* Effect.acquireRelease(
 			Effect.sync(
@@ -178,8 +178,8 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 
 const program = Effect.gen(function* () {
 	const start = yield* Effect.succeed(Date.now())
-	const redisService = yield* RedisService
-	const queue = yield* redisService.new("test")
+	const queueService = yield* RedisQueueService
+	const queue = yield* queueService.new("test")
 
 	yield* queue.enqueue("hello")
 
@@ -195,6 +195,6 @@ const program = Effect.gen(function* () {
 
 	// yield* queue.nack(item2.id)
 	yield* Effect.logInfo(`Took ${Date.now() - start}ms`)
-}).pipe(Effect.provide(RedisService.Default), Effect.scoped)
+}).pipe(Effect.provide(RedisQueueService.Default), Effect.scoped)
 
 program.pipe(BunRuntime.runMain)

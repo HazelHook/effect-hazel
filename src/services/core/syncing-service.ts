@@ -6,6 +6,7 @@ import { Providers } from "../providers/providers-service"
 import { eq, inArray } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
 import type { InsertItem } from "../db-service"
+import { RedisQueueService } from "../redis-queue"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
@@ -15,8 +16,6 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 			syncResource: (collectionId: string, providerKey: string, resourceKey: string) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
-
-					// const queue = yield* RedisService
 
 					const thirdPartyConnection = (yield* db
 						.select()
@@ -121,6 +120,10 @@ const handleSync = ({
 	Effect.gen(function* () {
 		const db = yield* PgDrizzle
 
+		const queueService = yield* RedisQueueService
+
+		const queue = yield* queueService.new(`${collectionId}:${providerKey}:${resourceKey}`)
+
 		const dbItems = yield* db
 			.select()
 			.from(schema.items)
@@ -175,6 +178,4 @@ const handleSync = ({
 
 			yield* Effect.logInfo(`synced ${itemsToUpdate.length} items for ${providerKey}:${resourceKey}`)
 		}
-
-		yield* Effect.logInfo(`saw total ${data.length} items for ${providerKey}:${resourceKey}`)
 	})
