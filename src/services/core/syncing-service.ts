@@ -3,9 +3,10 @@ import { Config, Effect, Option, TMap } from "effect"
 import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../../errors"
 import { Providers } from "../providers/providers-service"
 
-import { eq, sql } from "drizzle-orm"
+import { eq, inArray, sql } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
 import type { InsertItem } from "../db-service"
+import { RedisService } from "../redis-queue"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
@@ -15,6 +16,8 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 			syncResource: (collectionId: string, providerKey: string, resourceKey: string) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
+
+					const queue = yield* RedisService
 
 					const thirdPartyConnection = (yield* db
 						.select()
@@ -55,7 +58,17 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								return yield* Effect.fail("Should not get here")
 							}
 
-							const dbItems: InsertItem[] = items.map((item) => {
+							const dbItems = yield* db
+								.select()
+								.from(schema.items)
+								.where(
+									inArray(
+										schema.items.externalId,
+										items.map((item) => item.id),
+									),
+								)
+
+							const data: InsertItem[] = items.map((item) => {
 								return {
 									externalId: item.id,
 									data: item.data,
@@ -64,21 +77,45 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								}
 							})
 
-							yield* db
-								.insert(schema.items)
-								.values(dbItems)
-								.onConflictDoUpdate({
-									target: [schema.items.collectionId, schema.items.externalId],
-									set: {
-										data: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN excluded.data ELSE ${schema.items.data} END`,
-										lastSeenAt: sql`now()`,
-										deletedAt: sql`NULL`,
-										updatedAt: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN now() ELSE ${schema.items.updatedAt} END`,
-									},
-								})
+							const ids = new Set(dbItems.map((item) => item.id))
+
+							// Filter out items that already exist in the database and insert new items,
+							// this
+							const newItems = data.filter((item) => !ids.has(item.externalId))
+							const existingItems = data.filter((item) => ids.has(item.externalId))
+							const itemsToUpdate = existingItems.reduce((acc, item) => {
+								const dbItem = dbItems.find((dbItem) => dbItem.id === item.externalId)
+
+								if (!dbItem || dbItem.data === item.data) {
+									return acc
+								}
+
+								acc.push({ ...dbItem, ...item })
+								return acc
+							}, [] as schema.Item[])
+
+							yield* db.insert(schema.items).values(newItems)
 
 							yield* Effect.logInfo(
-								`synced ${dbItems.length} items for ${providerKey}:${resourceKey}`,
+								`created ${newItems.length} new items for ${providerKey}:${resourceKey}`,
+								`hasMore ${paginationInfo.hasMore}`,
+							)
+
+							// Update existing items that have changed, maybe this should be done in a transaction?
+							yield* Effect.all(
+								itemsToUpdate.map((item) => db.update(schema.items).set(item)),
+								{
+									concurrency: "unbounded",
+								},
+							)
+
+							yield* Effect.logInfo(
+								`synced ${itemsToUpdate.length} items for ${providerKey}:${resourceKey}`,
+								`hasMore ${paginationInfo.hasMore}`,
+							)
+
+							yield* Effect.logInfo(
+								`saw total ${data.length} items for ${providerKey}:${resourceKey}`,
 								`hasMore ${paginationInfo.hasMore}`,
 							)
 

@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm"
+import { type InferSelectModel, sql } from "drizzle-orm"
 import {
 	bigint,
 	boolean,
@@ -137,3 +137,5 @@ export const schemaMigrations = pgTable("schema_migrations", {
 	version: bigint({ mode: "number" }).primaryKey().notNull(),
 	dirty: boolean().notNull(),
 })
+
+export type Item = InferSelectModel<typeof items>

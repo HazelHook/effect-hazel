@@ -32,6 +32,31 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 					const getQueueName = (type: "processing" | "pending" | "hashed") => `${name}:${type}`
 
 					return {
+						// enqueueMultiple: <T>(data: T[]) =>
+						// 	Effect.gen(function* () {
+						// 		const items = data.map((datum) =>
+						// 			Message.make({
+						// 				id: nanoid(),
+						// 				attempts: 0,
+						// 				timestamp: Date.now(),
+						// 				payload: datum,
+						// 			}),
+						// 		)
+
+						// 		yield* Effect.tryPromise({
+						// 			try: () =>
+						// 				redis
+						// 					.multi()
+						// 					.hset(...items.map((item) => [item.id, JSON.stringify(item)]))
+						// 					.lpush(getQueueName("pending"), ...items.map((item) => item.id))
+						// 					.exec(),
+						// 			catch: (e) => Effect.fail(e),
+						// 		})
+
+						// 		yield* Effect.logInfo(`Enqueued ${items.length} for ${name}`)
+
+						// 		return items
+						// 	}),
 						enqueue: <T>(data: T) =>
 							Effect.gen(function* () {
 								const item = Message.make({
@@ -45,7 +70,7 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 									try: () =>
 										redis
 											.multi()
-											.hset(getQueueName("hashed"), item.id, JSON.stringify(item))
+											.hset(getQueueName("hashed"), [item.id, JSON.stringify(item)])
 											.lpush(getQueueName("pending"), item.id)
 											.exec(),
 									catch: (e) => Effect.fail(e),
@@ -121,19 +146,19 @@ const program = Effect.gen(function* () {
 	const redisService = yield* RedisService
 	const queue = yield* redisService.new("test")
 
-	yield* queue.enqueue("hello").pipe(Effect.repeatN(1000))
+	yield* queue.enqueue("hello")
 
-	const item = yield* queue.dequeue()
+	// const item = yield* queue.dequeue()
 
-	if (!item) return
+	// if (!item) return
 
-	yield* queue.ack(item.id)
+	// yield* queue.ack(item.id)
 
-	const item2 = yield* queue.dequeue()
+	// const item2 = yield* queue.dequeue()
 
-	if (!item2) return
+	// if (!item2) return
 
-	yield* queue.nack(item2.id)
+	// yield* queue.nack(item2.id)
 	yield* Effect.logInfo(`Took ${Date.now() - start}ms`)
 }).pipe(Effect.provide(RedisService.Default), Effect.scoped)
 
