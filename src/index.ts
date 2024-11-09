@@ -1,4 +1,4 @@
-import { Config, Effect, Layer } from "effect"
+import { Effect, Layer } from "effect"
 
 import { Providers } from "./services/providers/providers-service"
 

@@ -32,31 +32,34 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 					const getQueueName = (type: "processing" | "pending" | "hashed") => `${name}:${type}`
 
 					return {
-						// enqueueMultiple: <T>(data: T[]) =>
-						// 	Effect.gen(function* () {
-						// 		const items = data.map((datum) =>
-						// 			Message.make({
-						// 				id: nanoid(),
-						// 				attempts: 0,
-						// 				timestamp: Date.now(),
-						// 				payload: datum,
-						// 			}),
-						// 		)
+						enqueueMultiple: <T>(data: T[]) =>
+							Effect.gen(function* () {
+								const items = data.map((datum) =>
+									Message.make({
+										id: nanoid(),
+										attempts: 0,
+										timestamp: Date.now(),
+										payload: datum,
+									}),
+								)
 
-						// 		yield* Effect.tryPromise({
-						// 			try: () =>
-						// 				redis
-						// 					.multi()
-						// 					.hset(...items.map((item) => [item.id, JSON.stringify(item)]))
-						// 					.lpush(getQueueName("pending"), ...items.map((item) => item.id))
-						// 					.exec(),
-						// 			catch: (e) => Effect.fail(e),
-						// 		})
+								yield* Effect.tryPromise({
+									try: () =>
+										redis
+											.multi()
+											.hset(
+												getQueueName("hashed"),
+												new Map(items.map((item) => [item.id, JSON.stringify(item)])),
+											)
+											.lpush(getQueueName("pending"), ...items.map((item) => item.id))
+											.exec(),
+									catch: (e) => Effect.fail(e),
+								})
 
-						// 		yield* Effect.logInfo(`Enqueued ${items.length} for ${name}`)
+								yield* Effect.logInfo(`Enqueued ${items.length} for ${name}`)
 
-						// 		return items
-						// 	}),
+								return items
+							}),
 						enqueue: <T>(data: T) =>
 							Effect.gen(function* () {
 								const item = Message.make({

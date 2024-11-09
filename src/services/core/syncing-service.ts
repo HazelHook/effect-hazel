@@ -6,7 +6,6 @@ import { Providers } from "../providers/providers-service"
 import { eq, inArray, sql } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
 import type { InsertItem } from "../db-service"
-import { RedisService } from "../redis-queue"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
@@ -17,7 +16,7 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
 
-					const queue = yield* RedisService
+					// const queue = yield* RedisService
 
 					const thirdPartyConnection = (yield* db
 						.select()
@@ -54,70 +53,18 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								},
 							)
 
+							// TODO: This should be fixxed by typscript knowing this is an offset, since we literally input it above,
+							// TODO: please fix this at some point
 							if (paginationInfo.type === "offset") {
 								return yield* Effect.fail("Should not get here")
 							}
 
-							const dbItems = yield* db
-								.select()
-								.from(schema.items)
-								.where(
-									inArray(
-										schema.items.externalId,
-										items.map((item) => item.id),
-									),
-								)
-
-							const data: InsertItem[] = items.map((item) => {
-								return {
-									externalId: item.id,
-									data: item.data,
-									collectionId: collectionId,
-									resourceKey: resourceKey,
-								}
+							yield* handleSync({
+								collectionId,
+								providerKey,
+								resourceKey,
+								items,
 							})
-
-							const ids = new Set(dbItems.map((item) => item.id))
-
-							// Filter out items that already exist in the database and insert new items,
-							// this
-							const newItems = data.filter((item) => !ids.has(item.externalId))
-							const existingItems = data.filter((item) => ids.has(item.externalId))
-							const itemsToUpdate = existingItems.reduce((acc, item) => {
-								const dbItem = dbItems.find((dbItem) => dbItem.id === item.externalId)
-
-								if (!dbItem || dbItem.data === item.data) {
-									return acc
-								}
-
-								acc.push({ ...dbItem, ...item })
-								return acc
-							}, [] as schema.Item[])
-
-							yield* db.insert(schema.items).values(newItems)
-
-							yield* Effect.logInfo(
-								`created ${newItems.length} new items for ${providerKey}:${resourceKey}`,
-								`hasMore ${paginationInfo.hasMore}`,
-							)
-
-							// Update existing items that have changed, maybe this should be done in a transaction?
-							yield* Effect.all(
-								itemsToUpdate.map((item) => db.update(schema.items).set(item)),
-								{
-									concurrency: "unbounded",
-								},
-							)
-
-							yield* Effect.logInfo(
-								`synced ${itemsToUpdate.length} items for ${providerKey}:${resourceKey}`,
-								`hasMore ${paginationInfo.hasMore}`,
-							)
-
-							yield* Effect.logInfo(
-								`saw total ${data.length} items for ${providerKey}:${resourceKey}`,
-								`hasMore ${paginationInfo.hasMore}`,
-							)
 
 							cursorId = paginationInfo.cursorId
 							hasMore = paginationInfo.hasMore
@@ -135,27 +82,12 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 								limit: limit,
 							})
 
-							const dbItems: InsertItem[] = items.map((item) => {
-								return {
-									externalId: item.id,
-									data: item.data,
-									collectionId: collectionId,
-									resourceKey: resourceKey,
-								}
+							yield* handleSync({
+								collectionId,
+								providerKey,
+								resourceKey,
+								items,
 							})
-
-							yield* db
-								.insert(schema.items)
-								.values(dbItems)
-								.onConflictDoUpdate({
-									target: [schema.items.collectionId, schema.items.externalId],
-									set: {
-										data: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN excluded.data ELSE ${schema.items.data} END`,
-										lastSeenAt: sql`now()`,
-										deletedAt: sql`NULL`,
-										updatedAt: sql`CASE WHEN ${schema.items.data} <> excluded.data THEN now() ELSE ${schema.items.updatedAt} END`,
-									},
-								})
 						}
 					}
 				}).pipe(
@@ -171,3 +103,78 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 	}),
 	dependencies: [Providers.Default],
 }) {}
+
+const handleSync = ({
+	collectionId,
+	providerKey,
+	resourceKey,
+	items,
+}: {
+	collectionId: string
+	providerKey: string
+	resourceKey: string
+	items: {
+		id: string
+		data: unknown
+	}[]
+}) =>
+	Effect.gen(function* () {
+		const db = yield* PgDrizzle
+
+		const dbItems = yield* db
+			.select()
+			.from(schema.items)
+			.where(
+				inArray(
+					schema.items.externalId,
+					items.map((item) => item.id),
+				),
+			)
+
+		const data: InsertItem[] = items.map((item) => {
+			return {
+				externalId: item.id,
+				data: item.data,
+				collectionId: collectionId,
+				resourceKey: resourceKey,
+			}
+		})
+
+		const ids = new Set(dbItems.map((item) => item.externalId))
+
+		// Filter out items that already exist in the database and insert new items,
+		// this
+		const newItems = data.filter((item) => !ids.has(item.externalId))
+		const existingItems = data.filter((item) => ids.has(item.externalId))
+		const itemsToUpdate = existingItems.reduce((acc, item) => {
+			const dbItem = dbItems.find((dbItem) => dbItem.id === item.externalId)
+
+			if (!dbItem || dbItem.data === item.data) {
+				return acc
+			}
+
+			acc.push({ ...dbItem, ...item })
+			return acc
+		}, [] as schema.Item[])
+
+		if (newItems.length > 0) {
+			yield* db.insert(schema.items).values(newItems)
+
+			yield* Effect.logInfo(`created ${newItems.length} new items for ${providerKey}:${resourceKey}`)
+		}
+
+		if (itemsToUpdate.length > 0) {
+			// Update existing items that have changed, maybe this should be done in a transaction?
+
+			yield* Effect.all(
+				itemsToUpdate.map((item) => db.update(schema.items).set(item)),
+				{
+					concurrency: "unbounded",
+				},
+			)
+
+			yield* Effect.logInfo(`synced ${itemsToUpdate.length} items for ${providerKey}:${resourceKey}`)
+		}
+
+		yield* Effect.logInfo(`saw total ${data.length} items for ${providerKey}:${resourceKey}`)
+	})
