@@ -158,7 +158,7 @@ export class ResourceService extends Effect.Service<ResourceService>()("Resource
 								Effect.flatMap(baseOptions.getCount.mapData),
 								Effect.scoped,
 							)
-						}),
+						}).pipe(Effect.withSpan("getCount")),
 				}
 			},
 		}

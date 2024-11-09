@@ -59,7 +59,14 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 								yield* Effect.logInfo(`Enqueued ${items.length} for ${name}`)
 
 								return items
-							}),
+							}).pipe(
+								Effect.withSpan("enqueueMultiple", {
+									attributes: {
+										queueName: name,
+										numberOfItems: data.length,
+									},
+								}),
+							),
 						enqueue: <T>(data: T) =>
 							Effect.gen(function* () {
 								const item = Message.make({
@@ -82,7 +89,14 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 								yield* Effect.logInfo(`Enqueued ${item.id} for ${name}`)
 
 								return item
-							}),
+							}).pipe(
+								Effect.withSpan("enqueue", {
+									attributes: {
+										queueName: name,
+										data: JSON.stringify(data),
+									},
+								}),
+							),
 						dequeue: () =>
 							Effect.gen(function* () {
 								const id = yield* Effect.tryPromise({
@@ -106,7 +120,13 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 								yield* Effect.logInfo(`Dequeued ${parsedMessage.id} for ${name}`)
 
 								return parsedMessage
-							}),
+							}).pipe(
+								Effect.withSpan("dequeue", {
+									attributes: {
+										queueName: name,
+									},
+								}),
+							),
 						ack: (messageId: string) =>
 							Effect.gen(function* () {
 								const message = yield* Effect.tryPromise({
@@ -123,7 +143,13 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 								yield* Effect.logInfo(`Acked ${messageId} for ${name}`)
 
 								return true
-							}),
+							}).pipe(
+								Effect.withSpan("ack", {
+									attributes: {
+										queueName: name,
+									},
+								}),
+							),
 						nack: (messageId: string) =>
 							Effect.gen(function* () {
 								yield* Effect.tryPromise({
@@ -137,7 +163,13 @@ export class RedisService extends Effect.Service<RedisService>()("RedisService",
 								})
 
 								yield* Effect.logInfo(`Nacked ${messageId} for ${name}`)
-							}),
+							}).pipe(
+								Effect.withSpan("nack", {
+									attributes: {
+										queueName: name,
+									},
+								}),
+							),
 					}
 				}),
 		}

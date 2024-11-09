@@ -1,9 +1,9 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
-import { Config, Effect, Option, TMap } from "effect"
+import { Effect, Option, TMap } from "effect"
 import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFoundError } from "../../errors"
 import { Providers } from "../providers/providers-service"
 
-import { eq, inArray, sql } from "drizzle-orm"
+import { eq, inArray } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
 import type { InsertItem } from "../db-service"
 
