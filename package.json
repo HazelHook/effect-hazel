@@ -3,9 +3,12 @@
 	"module": "index.ts",
 	"type": "module",
 	"scripts": {
-		"dev": "NODE_ENV=development bun --watch run src/index.ts",
-		"typecheck": "tsc --noEmit",
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
 		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"typecheck": "tsc --noEmit",
 		"db:pull": "drizzle-kit pull"
 	},
 	"devDependencies": {
@@ -13,8 +16,13 @@
 		"@effect/vitest": "^0.13.15",
 		"@types/bun": "1.1.13",
 		"drizzle-kit": "^0.28.1",
+		"@cloudflare/vitest-pool-workers": "^0.5.29",
+		"@cloudflare/workers-types": "^4.20241112.0",
+		"@effect/language-service": "^0.2.0",
+		"@types/node": "^22.9.1",
 		"typescript": "^5.6.3",
-		"vitest": "^2.1.5"
+		"vitest": "2.1.5",
+		"wrangler": "^3.88.0"
 	},
 	"dependencies": {
 		"@effect/experimental": "^0.32.8",
