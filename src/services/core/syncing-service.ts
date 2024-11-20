@@ -6,7 +6,6 @@ import { Providers } from "../providers/providers-service"
 import { eq, inArray } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
 import { DrizzleLive, type InsertItem } from "../db-service"
-import { RedisQueueService } from "../redis-queue"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
 	effect: Effect.gen(function* () {
