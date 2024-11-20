@@ -19,7 +19,7 @@ export const CollectionSyncWorkflow = makeWorkflow(
 			syncJobId: Schema.String,
 		}),
 	},
-	(args) =>
+	(args, env) =>
 		Effect.gen(function* () {
 			const workflow = yield* Workflow
 
@@ -48,7 +48,7 @@ export const CollectionSyncWorkflow = makeWorkflow(
 				syncJobService.startSyncJob(args.syncJobId).pipe(Effect.catchAll(Effect.die)),
 			)
 
-			// const childJobs = []
+			const childJobs = []
 
 			for (const resource of collection.resources) {
 				// TODO: Extract to service
@@ -70,25 +70,23 @@ export const CollectionSyncWorkflow = makeWorkflow(
 
 				const syncingService = yield* SyncingService
 
-				yield* workflow.do(
-					"syncResource",
-					syncingService
-						.syncResource(args.collectionId, collection.providerId, resource)
-						.pipe(Effect.provide(DrizzleLive), Effect.catchAll(Effect.die)),
+				childJobs.push(
+					workflow.do(
+						"syncResource",
+						syncingService
+							.syncResource(args.collectionId, collection.providerId, resource)
+							.pipe(Effect.provide(DrizzleLive), Effect.catchAll(Effect.die)),
+					),
 				)
-				// 	// childJobs.push(
-				// 	// 	Effect.tryPromise({
-				// 	// 		try: () => Effect.logInfo("WOW"),
-				// 	// 		// try: () => ctx.spawnWorkflow("resource-sync-ts", resourceWorklfowInput).result(),
-				// 	// 		catch: (err) => new ChildJobError(),
-				// 	// 	}),
-				// 	// )
 			}
 
-			// const finishedJobs = yield* Effect.all(childJobs, {
-			// 	concurrency: "unbounded",
-			// 	mode: "either",
-			// })
+			// TODO: This doesnt work like this anymore needs to be rebuild
+			const finishedJobs = yield* Effect.all(childJobs, {
+				concurrency: "unbounded",
+				mode: "either",
+			})
+
+			yield* Effect.logInfo("Finished Jobs", finishedJobs.length)
 
 			// const sucessfulJobs = finishedJobs.filter((job) => Either.isRight(job))
 			// const failedJobs = finishedJobs.filter((job) => Either.isLeft(job))
@@ -98,11 +96,11 @@ export const CollectionSyncWorkflow = makeWorkflow(
 
 			// if (failedJobs.length > 0) {
 			// 	// TODO: Do something smarter here with these errors
-			// 	yield* syncJobService.setSyncJobStatus(
-			// 		args.syncJobId,
-			// 		"error",
-			// 		`Failed to sync ${failedJobs.length} resources`,
-			// 	)
+			// yield* syncJobService.setSyncJobStatus(
+			// 	args.syncJobId,
+			// 	"error",
+			// 	`Failed to sync ${failedJobs.length} resources`,
+			// )
 
 			// 	return { success: true }
 			// }

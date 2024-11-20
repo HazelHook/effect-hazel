@@ -121,7 +121,7 @@ export interface WorkflowClass<T, A, I> extends WorkerEntrypoint<never> {
 
 export const makeWorkflow = <const Tag, A, I>(
 	{ binding, name, schema }: { name: Tag; binding: string; schema: Schema.Schema<A, I> },
-	run: (event: A) => Effect.Effect<void, never, Workflow | WorkflowEvent>,
+	run: (event: A, env: Env) => Effect.Effect<void, never, Workflow | WorkflowEvent>,
 ) => {
 	const ret = class extends WorkerEntrypoint<never> {
 		static _tag = name as Tag
@@ -131,7 +131,7 @@ export const makeWorkflow = <const Tag, A, I>(
 		static _schema = schema
 
 		run(...args: any) {
-			return EffectWorkflowRun(schema, run).apply(null, args)
+			return EffectWorkflowRun(schema, run, this as unknown as Env).apply(null, args)
 		}
 	}
 
@@ -140,7 +140,8 @@ export const makeWorkflow = <const Tag, A, I>(
 
 export const EffectWorkflowRun = <A, I>(
 	schema: Schema.Schema<A, I>,
-	effect: (event: A) => Effect.Effect<void, never, Workflow | WorkflowEvent>,
+	effect: (event: A, env: Env) => Effect.Effect<void, never, Workflow | WorkflowEvent>,
+	env: Env,
 ) => {
 	const decode = Schema.decodeUnknown(schema)
 
@@ -148,7 +149,7 @@ export const EffectWorkflowRun = <A, I>(
 		Effect.runPromise(
 			pipe(
 				decode(event.payload),
-				Effect.flatMap((_) => effect(_)),
+				Effect.flatMap((_) => effect(_, env)),
 				Effect.provide(Layer.succeed(WorkflowEvent, event)),
 				Effect.provide(
 					Layer.sync(Workflow, () => ({
