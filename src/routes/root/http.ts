@@ -14,11 +14,17 @@ export const HttpRootLive = HttpApiBuilder.group(Api, "Root", (handlers) =>
 					return yield* Effect.succeed("OK")
 				}),
 			)
-			.handle("sync", () =>
+			.handle("sync", ({ payload }) =>
 				Effect.gen(function* () {
-					yield* resourceSyncWorkflow.create()
+					yield* resourceSyncWorkflow.create({
+						params: {
+							collectionId: payload.collectionId,
+							syncJobId: payload.syncJobId,
+						},
+					})
 					return yield* Effect.succeed("OK")
 				}).pipe(
+					Effect.tapError((e) => Effect.logError("Error", e)),
 					Effect.catchTags({
 						ParseError: (e) => Effect.succeed(e.message),
 					}),

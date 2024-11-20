@@ -120,9 +120,9 @@ const handleSync = ({
 	Effect.gen(function* () {
 		const db = yield* PgDrizzle
 
-		const queueService = yield* RedisQueueService
+		// const queueService = yield* RedisQueueService
 
-		const queue = yield* queueService.new(`${collectionId}:${providerKey}:${resourceKey}`)
+		// const queue = yield* queueService.new(`${collectionId}:${providerKey}:${resourceKey}`)
 
 		const dbItems = yield* db
 			.select()
