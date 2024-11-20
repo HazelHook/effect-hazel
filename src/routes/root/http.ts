@@ -6,7 +6,7 @@ import { Workflows } from "~/lib/cloudflare/workflows"
 export const HttpRootLive = HttpApiBuilder.group(Api, "Root", (handlers) =>
 	Effect.gen(function* () {
 		const workflow = yield* Workflows
-		const resourceSyncWorkflow = workflow.getWorkflow<WorkflowsBinding>("MyWorkflow")
+		const resourceSyncWorkflow = workflow.getWorkflow<WorkflowsBinding>("CollectionSyncWorkflow")
 
 		return handlers
 			.handle("health", () =>

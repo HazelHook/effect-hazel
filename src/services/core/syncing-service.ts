@@ -5,7 +5,7 @@ import { Providers } from "../providers/providers-service"
 
 import { eq, inArray } from "drizzle-orm"
 import * as schema from "../../drizzle/schema"
-import type { InsertItem } from "../db-service"
+import { DrizzleLive, type InsertItem } from "../db-service"
 import { RedisQueueService } from "../redis-queue"
 
 export class SyncingService extends Effect.Service<SyncingService>()("SyncingService", {
@@ -100,7 +100,7 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 				),
 		}
 	}),
-	dependencies: [Providers.Default],
+	dependencies: [Providers.Default, DrizzleLive],
 }) {}
 
 const handleSync = ({

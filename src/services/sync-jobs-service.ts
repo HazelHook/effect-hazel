@@ -10,7 +10,7 @@ export class SyncJobService extends Effect.Service<SyncJobService>()("SyncJobSer
 		const db = yield* PgDrizzle
 
 		return {
-			startSyncJob: (syncJobId: string, externalId: string) =>
+			startSyncJob: (syncJobId: string) =>
 				Effect.gen(function* () {
 					yield* db
 						.update(schema.syncJobs)
@@ -18,7 +18,6 @@ export class SyncJobService extends Effect.Service<SyncJobService>()("SyncJobSer
 							status: "running",
 							startedAt: sql`now()`,
 							updatedAt: sql`now()`,
-							externalId: externalId,
 						})
 						.where(eq(schema.syncJobs.id, syncJobId))
 				}),

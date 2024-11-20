@@ -1,116 +1,119 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
-import type { Context, Workflow } from "@hatchet-dev/typescript-sdk"
-import { Effect, Either, Exit } from "effect"
-
 import { eq } from "drizzle-orm"
+import { Effect, Schema, pipe } from "effect"
+import { Workflow, makeWorkflow } from "~/lib/cloudflare/workflows"
+import { SyncJobService } from "~/services/sync-jobs-service"
+
+import { CollectionNotFoundError } from "~/errors"
+import { SyncingService } from "~/services/core/syncing-service"
+import { DrizzleLive } from "~/services/db-service"
 import { MainLayer } from ".."
 import * as schema from "../drizzle/schema"
-import { ChildJobError, CollectionNotFoundError } from "../errors"
-import { SyncJobService } from "../services/sync-jobs-service"
-import type { ResourceSyncWorkflowInput } from "./resource-sync"
 
-type WorkflowInput = {
-	collectionId: string
-	syncJobId: string
-}
+export const CollectionSyncWorkflow = makeWorkflow(
+	{
+		name: "CollectionSyncWorkflow",
+		binding: "COLLECTION_SYNC_WORKFLOW",
+		schema: Schema.Struct({
+			collectionId: Schema.String,
+			syncJobId: Schema.String,
+		}),
+	},
+	(args) =>
+		Effect.gen(function* () {
+			const workflow = yield* Workflow
 
-const effectWorkflow = (ctx: Context<WorkflowInput>) =>
-	Effect.gen(function* () {
-		const db = yield* PgDrizzle
+			const db = yield* PgDrizzle
 
-		const syncJobService = yield* SyncJobService
+			const syncJobService = yield* SyncJobService
 
-		const collection = (yield* db
-			.select()
-			.from(schema.collections)
-			.where(eq(schema.collections.id, ctx.data.input.collectionId)))[0]
+			yield* Effect.log("args", args)
 
-		if (!collection) {
-			return yield* new CollectionNotFoundError(ctx.data.input.collectionId)
-		}
+			const collection = yield* workflow.do(
+				"getCollection",
+				pipe(
+					db.select().from(schema.collections).where(eq(schema.collections.id, args.collectionId)),
+					Effect.map((value) => value[0]),
+				).pipe(Effect.catchAll(Effect.die)),
+			)
 
-		yield* Effect.logInfo("Syncing Collection", collection.name)
-
-		yield* syncJobService.startSyncJob(ctx.data.input.syncJobId, ctx.workflowRunId())
-
-		const childJobs = []
-
-		for (const resource of collection.resources) {
-			// TODO: Extract to service
-			const resourceSyncJob = (yield* db
-				.insert(schema.syncJobs)
-				.values({
-					collectionId: ctx.data.input.collectionId,
-					status: "pending",
-					syncJobId: ctx.data.input.syncJobId,
-					resourceKey: resource,
-				})
-				.returning())[0]!
-
-			const resourceWorklfowInput: ResourceSyncWorkflowInput = {
-				collectionId: ctx.data.input.collectionId,
-				resourceKey: resource,
-				providerKey: collection.providerId,
-				resourceSyncJobId: resourceSyncJob.id,
+			if (!collection) {
+				return yield* new CollectionNotFoundError(args.collectionId)
 			}
 
-			childJobs.push(
-				Effect.tryPromise({
-					try: () => ctx.spawnWorkflow("resource-sync-ts", resourceWorklfowInput).result(),
-					catch: (err) => new ChildJobError(),
-				}),
+			yield* Effect.logInfo("Syncing Collection", collection)
+
+			yield* workflow.do(
+				"startSyncJob",
+				syncJobService.startSyncJob(args.syncJobId).pipe(Effect.catchAll(Effect.die)),
 			)
-		}
 
-		const finishedJobs = yield* Effect.all(childJobs, {
-			concurrency: "unbounded",
-			mode: "either",
-		})
+			// const childJobs = []
 
-		const sucessfulJobs = finishedJobs.filter((job) => Either.isRight(job))
-		const failedJobs = finishedJobs.filter((job) => Either.isLeft(job))
+			for (const resource of collection.resources) {
+				// TODO: Extract to service
+				const resourceSyncJob = yield* workflow.do(
+					"createResourceSyncJob",
+					pipe(
+						db
+							.insert(schema.syncJobs)
+							.values({
+								collectionId: args.collectionId,
+								status: "pending",
+								syncJobId: args.syncJobId,
+								resourceKey: resource,
+							})
+							.returning(),
+						Effect.map((items) => items[0]!),
+					).pipe(Effect.catchAll(Effect.die)),
+				)
 
-		yield* Effect.logInfo("Successful Jobs", sucessfulJobs.length)
-		yield* Effect.logInfo("Failed Jobs", failedJobs.length)
+				const syncingService = yield* SyncingService
 
-		if (failedJobs.length > 0) {
-			// TODO: Do something smarter here with these errors
-			yield* syncJobService.setSyncJobStatus(
-				ctx.data.input.syncJobId,
-				"error",
-				`Failed to sync ${failedJobs.length} resources`,
+				yield* workflow.do(
+					"syncResource",
+					syncingService
+						.syncResource(args.collectionId, collection.providerId, resource)
+						.pipe(Effect.provide(DrizzleLive), Effect.catchAll(Effect.die)),
+				)
+				// 	// childJobs.push(
+				// 	// 	Effect.tryPromise({
+				// 	// 		try: () => Effect.logInfo("WOW"),
+				// 	// 		// try: () => ctx.spawnWorkflow("resource-sync-ts", resourceWorklfowInput).result(),
+				// 	// 		catch: (err) => new ChildJobError(),
+				// 	// 	}),
+				// 	// )
+			}
+
+			// const finishedJobs = yield* Effect.all(childJobs, {
+			// 	concurrency: "unbounded",
+			// 	mode: "either",
+			// })
+
+			// const sucessfulJobs = finishedJobs.filter((job) => Either.isRight(job))
+			// const failedJobs = finishedJobs.filter((job) => Either.isLeft(job))
+
+			// yield* Effect.logInfo("Successful Jobs", sucessfulJobs.length)
+			// yield* Effect.logInfo("Failed Jobs", failedJobs.length)
+
+			// if (failedJobs.length > 0) {
+			// 	// TODO: Do something smarter here with these errors
+			// 	yield* syncJobService.setSyncJobStatus(
+			// 		args.syncJobId,
+			// 		"error",
+			// 		`Failed to sync ${failedJobs.length} resources`,
+			// 	)
+
+			// 	return { success: true }
+			// }
+
+			yield* Effect.logInfo("Syncing Collection", collection.name)
+
+			yield* workflow.do(
+				"completeJob",
+				syncJobService.setSyncJobStatus(args.syncJobId, "completed").pipe(Effect.catchAll(Effect.die)),
 			)
 
 			return { success: true }
-		}
-
-		yield* syncJobService.setSyncJobStatus(ctx.data.input.syncJobId, "completed")
-
-		return { success: true }
-	}).pipe(Effect.withSpan("collection-sync-workflow"))
-
-export const collectionSyncWorkflow: Workflow = {
-	id: "collection-sync-ts",
-	description: "Workflow to Sync a Collection with all of its resources",
-	on: {
-		event: "collection:sync",
-	},
-	scheduleTimeout: "36h",
-	steps: [
-		{
-			name: "sync",
-			run: async (ctx: Context<WorkflowInput>) => {
-				const exit = await Effect.runPromiseExit(effectWorkflow(ctx).pipe(Effect.provide(MainLayer)))
-
-				return Exit.match(exit, {
-					onFailure: (cause) => {
-						throw new Error(`Failed with failure state ${cause._tag}`)
-					},
-					onSuccess: (values) => {
-						return values
-					},
-				})
-			},
-		},
-	],
-}
+		}).pipe(Effect.withSpan("collection-sync-workflow"), Effect.provide(MainLayer), Effect.catchAll(Effect.die)),
+)

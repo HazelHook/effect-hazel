@@ -11,9 +11,9 @@ enabled = true
 mode = "smart"
 
 [[workflows]]
-name = "workflow-test-1"
-binding = "MY_WORKFLOW"
-class_name = "MyWorkflow"
+name = "workflow-collection-sync"
+binding = "COLLECTION_SYNC_WORKFLOW"
+class_name = "CollectionSyncWorkflow"
 
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
