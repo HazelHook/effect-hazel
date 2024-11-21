@@ -15,10 +15,10 @@ name = "workflow-collection-sync"
 binding = "COLLECTION_SYNC_WORKFLOW"
 class_name = "CollectionSyncWorkflow"
 
-# [[workflows]]
-# name = "workflow-resource-sync2"
-# binding = "RESOURCE_SYNC_WORKFLOW"
-# class_name = "ResourceSyncWorkflow"
+[[workflows]]
+name = "workflow-resource-sync"
+binding = "RESOURCE_SYNC_WORKFLOW"
+class_name = "ResourceSyncWorkflow"
 
 
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
