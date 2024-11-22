@@ -1,7 +1,7 @@
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { eq } from "drizzle-orm"
 import { Effect, Schema, pipe } from "effect"
-import { Workflow, makeWorkflow } from "~/lib/cloudflare/workflows"
+import { Workflow, Workflows, makeWorkflow } from "~/lib/cloudflare/workflows"
 import { SyncJobService } from "~/services/sync-jobs-service"
 
 import { CollectionNotFoundError } from "~/errors"
@@ -26,8 +26,6 @@ export const CollectionSyncWorkflow = makeWorkflow(
 			const db = yield* PgDrizzle
 
 			const syncJobService = yield* SyncJobService
-
-			yield* Effect.log("args", args)
 
 			const collection = yield* workflow.do(
 				"getCollection",
@@ -70,6 +68,7 @@ export const CollectionSyncWorkflow = makeWorkflow(
 
 				const syncingService = yield* SyncingService
 
+				// TODO: Catch errors here differentyly
 				childJobs.push(
 					workflow.do(
 						"syncResource",

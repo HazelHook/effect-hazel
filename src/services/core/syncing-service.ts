@@ -4,6 +4,7 @@ import { ProviderNotFoundError, ResourceNotFoundError, ThirdPartyConnectionNotFo
 import { Providers } from "../providers/providers-service"
 
 import { eq, inArray } from "drizzle-orm"
+import { Workflow } from "~/lib/cloudflare/workflows"
 import * as schema from "../../drizzle/schema"
 import { DrizzleLive, type InsertItem } from "../db-service"
 
@@ -11,15 +12,21 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 	effect: Effect.gen(function* () {
 		const providers = yield* Providers
 
+		const workflow = yield* Workflow
+
 		return {
 			syncResource: (collectionId: string, providerKey: string, resourceKey: string) =>
 				Effect.gen(function* () {
 					const db = yield* PgDrizzle
 
-					const thirdPartyConnection = (yield* db
-						.select()
-						.from(schema.thirdPartyConnections)
-						.where(eq(schema.thirdPartyConnections.collectionId, collectionId)))[0]
+					const thirdPartyConnection = (yield* workflow.do(
+						"getThirdPartyConnection",
+						db
+							.select()
+							.from(schema.thirdPartyConnections)
+							.where(eq(schema.thirdPartyConnections.collectionId, collectionId))
+							.pipe(Effect.catchAll(Effect.die)),
+					))[0]
 
 					if (!thirdPartyConnection) {
 						return yield* new ThirdPartyConnectionNotFoundError(collectionId)
@@ -42,13 +49,15 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						let cursorId: Option.Option<string> = Option.none()
 
 						while (hasMore) {
-							const { paginationInfo, items } = yield* resource.getEntries(
-								thirdPartyConnection.accessToken,
-								{
-									type: "cursor",
-									cursorId: cursorId,
-									limit: limit,
-								},
+							const { paginationInfo, items } = yield* workflow.do(
+								"getEntries",
+								resource
+									.getEntries(thirdPartyConnection.accessToken, {
+										type: "cursor",
+										cursorId: cursorId,
+										limit: limit,
+									})
+									.pipe(Effect.catchAll(Effect.die)),
 							)
 
 							// TODO: This should be fixxed by typscript knowing this is an offset, since we literally input it above,
@@ -70,15 +79,24 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 					}
 
 					if (resource.baseOptions.paginationType === "offset") {
-						const count = yield* resource.getCount(thirdPartyConnection.accessToken)
+						const count = yield* workflow.do(
+							"getCount",
+							resource.getCount(thirdPartyConnection.accessToken).pipe(Effect.catchAll(Effect.die)),
+						)
+
 						yield* Effect.logInfo(`Synced ${count} items for ${providerKey}:${resourceKey}`)
 
 						for (let i = 0; i < count; i += limit) {
-							const { items } = yield* resource.getEntries(thirdPartyConnection.accessToken, {
-								type: "offset",
-								offset: i,
-								limit: limit,
-							})
+							const { items } = yield* workflow.do(
+								"getEntries",
+								resource
+									.getEntries(thirdPartyConnection.accessToken, {
+										type: "offset",
+										offset: i,
+										limit: limit,
+									})
+									.pipe(Effect.catchAll(Effect.die)),
+							)
 
 							yield* handleSync({
 								collectionId,

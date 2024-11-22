@@ -4,10 +4,9 @@ import { Collection, InsertCollection } from "./models"
 
 export class CollectionApi extends HttpApiGroup.make("Collection")
 	.add(
-		HttpApiEndpoint.post("createCollection", "/collections")
-			.annotate(OpenApi.Summary, "CreateCollection")
-			// .setPayload(InsertCollection as any)
-			.addSuccess(Collection as any),
+		HttpApiEndpoint.post("createCollection", "/collections").annotate(OpenApi.Summary, "CreateCollection"),
+		// .setPayload(InsertCollection as any)
+		// .addSuccess(Collection as any),
 	)
 	.add(
 		HttpApiEndpoint.del("deleteCollection", "/collections/:id")
@@ -26,7 +25,7 @@ export class CollectionApi extends HttpApiGroup.make("Collection")
 				Schema.Struct({
 					id: Schema.String,
 				}),
-			)
-			// .setPayload(Schema.partial(InsertCollection as any))
-			.addSuccess(Collection as any),
+			),
+		// .setPayload(Schema.partial(InsertCollection as any))
+		// .addSuccess(Collection as any),
 	) {}
