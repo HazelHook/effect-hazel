@@ -49,15 +49,13 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						let cursorId: Option.Option<string> = Option.none()
 
 						while (hasMore) {
-							const { paginationInfo, items } = yield* workflow.do(
-								"getEntries",
-								resource
-									.getEntries(thirdPartyConnection.accessToken, {
-										type: "cursor",
-										cursorId: cursorId,
-										limit: limit,
-									})
-									.pipe(Effect.catchAll(Effect.die)),
+							const { paginationInfo, items } = yield* resource.getEntries(
+								thirdPartyConnection.accessToken,
+								{
+									type: "cursor",
+									cursorId: cursorId,
+									limit: limit,
+								},
 							)
 
 							// TODO: This should be fixxed by typscript knowing this is an offset, since we literally input it above,
@@ -87,16 +85,11 @@ export class SyncingService extends Effect.Service<SyncingService>()("SyncingSer
 						yield* Effect.logInfo(`Synced ${count} items for ${providerKey}:${resourceKey}`)
 
 						for (let i = 0; i < count; i += limit) {
-							const { items } = yield* workflow.do(
-								"getEntries",
-								resource
-									.getEntries(thirdPartyConnection.accessToken, {
-										type: "offset",
-										offset: i,
-										limit: limit,
-									})
-									.pipe(Effect.catchAll(Effect.die)),
-							)
+							const { items } = yield* resource.getEntries(thirdPartyConnection.accessToken, {
+								type: "offset",
+								offset: i,
+								limit: limit,
+							})
 
 							yield* handleSync({
 								collectionId,
