@@ -1,7 +1,7 @@
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "@effect/platform"
 import { Schema } from "effect"
 import { Authorization } from "~/authorization"
-import { NotFound, Unauthorized } from "~/errors"
+import { InternalError, NotFound, Unauthorized } from "~/errors"
 
 export class RootApi extends HttpApiGroup.make("Root")
 	.add(HttpApiEndpoint.get("health", "/").annotate(OpenApi.Summary, "Health Check").addSuccess(Schema.String))
@@ -15,6 +15,7 @@ export class RootApi extends HttpApiGroup.make("Root")
 				}),
 			)
 			.addError(Unauthorized)
+			.addError(InternalError)
 			.addError(NotFound)
 			.middleware(Authorization),
 	) {}

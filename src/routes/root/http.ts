@@ -2,11 +2,10 @@ import { HttpApiBuilder } from "@effect/platform"
 import { PgDrizzle } from "@effect/sql-drizzle/Pg"
 import { Effect } from "effect"
 import { Api } from "~/api"
-import { Authorization } from "~/authorization"
 import { Workflows } from "~/lib/cloudflare/workflows"
 
 import { eq } from "drizzle-orm"
-import { NotFound } from "~/errors"
+import { InternalError, NotFound } from "~/errors"
 import * as schema from "../../drizzle/schema"
 
 export const HttpRootLive = HttpApiBuilder.group(Api, "Root", (handlers) =>
@@ -52,9 +51,8 @@ export const HttpRootLive = HttpApiBuilder.group(Api, "Root", (handlers) =>
 				}).pipe(
 					Effect.tapError((e) => Effect.logError("Error", e)),
 					Effect.catchTags({
-						// TODO: Fix this
-						ParseError: (e) => Effect.succeed(e.message),
-						SqlError: (e) => Effect.succeed(e.message),
+						ParseError: (e) => new InternalError({ message: e.message }),
+						SqlError: (e) => new InternalError({ message: e.message }),
 					}),
 				),
 			)
