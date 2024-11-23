@@ -11,7 +11,7 @@ const PgLive = PgClient.layerConfig({
 	url: Config.redacted("POSTGRES_URL"),
 	ssl: Config.boolean("isDev").pipe(
 		Config.orElse(() => Config.succeed(false)),
-		Config.map((isDev) => isDev),
+		Config.map((isDev) => !isDev),
 	),
 })
 
