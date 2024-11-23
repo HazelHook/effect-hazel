@@ -13,6 +13,7 @@ export const HttpAppLive = pipe(
 	Layer.provideMerge(HttpApiBuilder.middlewareCors()),
 	Layer.provideMerge(HttpServer.layerContext),
 	Layer.provideMerge(ApiLive),
+
 	Layer.provide(Logger.minimumLogLevel(LogLevel.All)),
 	Layer.provide(Logger.structured),
 )

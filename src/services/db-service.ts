@@ -7,7 +7,7 @@ import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 import type * as schema from "../drizzle/schema"
 import { HazelError } from "../errors"
 
-const PgLive = PgClient.layerConfig({
+export const PgLive = PgClient.layerConfig({
 	url: Config.redacted("POSTGRES_URL"),
 	ssl: Config.boolean("isDev").pipe(
 		Config.orElse(() => Config.succeed(false)),

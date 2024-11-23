@@ -1,8 +1,8 @@
-import * as Schema from "@effect/schema/Schema"
 import * as Drizzle from "drizzle-orm"
 import * as DrizzleMysql from "drizzle-orm/mysql-core"
 import * as DrizzlePg from "drizzle-orm/pg-core"
 import * as DrizzleSqlite from "drizzle-orm/sqlite-core"
+import { Schema } from "effect"
 
 type Columns<TTable extends Drizzle.Table> = TTable["_"]["columns"] extends infer TColumns extends Record<
 	string,
@@ -273,6 +273,7 @@ export function createInsertSchema<TTable extends Drizzle.Table, TRefine extends
 			? TRefine[K]
 			: Drizzle.DrizzleTypeError<`Column '${K & string}' does not exist in table '${TTable["_"]["name"]}'`>
 	},
+	// biome-ignore lint/complexity/noBannedTypes: <explanation>
 ): BuildInsertSchema<TTable, Drizzle.Equal<TRefine, InsertRefine<TTable>> extends true ? {} : TRefine> {
 	const columns = Drizzle.getTableColumns(table)
 	const columnEntries = Object.entries(columns)
@@ -312,7 +313,6 @@ export function createInsertSchema<TTable extends Drizzle.Table, TRefine extends
 
 export function createSelectSchema<TTable extends Drizzle.Table, TRefine extends SelectRefine<TTable>>(
 	table: TTable,
-	identifier: string,
 	refine?: {
 		[K in keyof TRefine]: K extends keyof TTable["_"]["columns"]
 			? TRefine[K]
@@ -351,9 +351,7 @@ export function createSelectSchema<TTable extends Drizzle.Table, TRefine extends
 		}
 	}
 
-	const ret = class extends Schema.Class<any>(identifier)(schemaEntries) {}
-
-	return ret as any
+	return Schema.Struct(schemaEntries) as any
 }
 
 function mapColumnToSchema(column: Drizzle.Column): Schema.Schema<any, any> {
