@@ -12,6 +12,7 @@ import { OpenTelemtryLive } from "./services/open-telemntry-service"
 import { Providers } from "./services/providers/providers-service"
 import { SyncJobService } from "./services/sync-jobs-service"
 
+import { AuthorizationLive } from "./api"
 import { workflows } from "./workflows"
 export * from "./workflows"
 
@@ -34,7 +35,11 @@ export const MainLayer = Layer.mergeAll(
 	Logger.pretty,
 )
 
-const HttpLive = Layer.mergeAll(HttpAppLive).pipe(Layer.provide(Workflows.fromRecord(() => workflows)))
+const HttpLive = Layer.mergeAll(HttpAppLive).pipe(
+	Layer.provide(Workflows.fromRecord(() => workflows)),
+	Layer.provide(DrizzleLive),
+	Layer.provide(AuthorizationLive),
+)
 
 const Live = HttpLive.pipe()
 

@@ -1,4 +1,5 @@
-import { Data } from "effect"
+import { HttpApiSchema } from "@effect/platform"
+import { Data, Schema } from "effect"
 
 export class ChildJobError extends Data.TaggedError("ChildJobError") {}
 
@@ -46,3 +47,27 @@ export class HazelError extends Data.TaggedError("HazelError")<{
 	message?: string | undefined
 	cause?: unknown
 }> {}
+
+export class InternalError extends Schema.TaggedError<InternalError>()(
+	"InternalError",
+	{
+		message: Schema.String,
+	},
+	HttpApiSchema.annotations({ status: 500 }),
+) {}
+
+export class Unauthorized extends Schema.TaggedError<Unauthorized>()(
+	"Unauthorized",
+	{
+		message: Schema.String,
+	},
+	HttpApiSchema.annotations({ status: 401 }),
+) {}
+
+export class NotFound extends Schema.TaggedError<NotFound>()(
+	"NotFound",
+	{
+		message: Schema.String,
+	},
+	HttpApiSchema.annotations({ status: 404 }),
+) {}
