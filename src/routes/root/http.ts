@@ -5,6 +5,7 @@ import { Api } from "~/api"
 import { Workflows } from "~/lib/cloudflare/workflows"
 
 import { eq } from "drizzle-orm"
+import { nanoid } from "nanoid"
 import { InternalError, NotFound } from "~/errors"
 import * as schema from "../../drizzle/schema"
 
@@ -34,6 +35,7 @@ export const HttpRootLive = HttpApiBuilder.group(Api, "Root", (handlers) =>
 					const syncJob = (yield* db
 						.insert(schema.syncJobs)
 						.values({
+							id: nanoid(21),
 							collectionId: payload.collectionId,
 							status: "pending",
 							trigger: "manual",

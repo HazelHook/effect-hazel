@@ -63,7 +63,10 @@ export const CollectionSyncWorkflow = makeWorkflow(
 							})
 							.returning(),
 						Effect.map((items) => items[0]!),
-					).pipe(Effect.catchAll(Effect.die)),
+					).pipe(
+						Effect.tapError((e) => Effect.logError(e)),
+						Effect.catchAll(Effect.die),
+					),
 				)
 
 				const syncingService = yield* SyncingService
