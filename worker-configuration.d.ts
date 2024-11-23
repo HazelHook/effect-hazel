@@ -8,5 +8,7 @@ interface Env {
 	TEST_CLERK_API_TOKEN: string;
 	TEST_STRIPE_API_TOKEN: string;
 	isDev: string;
+	CLERK_SECRET_KEY: string;
+	CLERK_PUBLISHABLE_KEY: string;
 	COLLECTION_SYNC_WORKFLOW: Workflow;
 }

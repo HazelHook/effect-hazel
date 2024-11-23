@@ -9,6 +9,10 @@ import { HazelError } from "../errors"
 
 const PgLive = PgClient.layerConfig({
 	url: Config.redacted("POSTGRES_URL"),
+	ssl: Config.boolean("isDev").pipe(
+		Config.orElse(() => Config.succeed(false)),
+		Config.map((isDev) => isDev),
+	),
 })
 
 const MappedPgLive = Layer.mapError(PgLive, (err) => {
